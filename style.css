@@ -1,0 +1,478 @@
+/* RigLedger site. One stylesheet, no build step, no web fonts.
+   The palette is the workbook's own: teal header bars, yellow "type here" cells,
+   grey result cells, gridline grey, white paper. */
+
+:root {
+  color-scheme: light dark;
+
+  --paper: #fbfbf9;
+  --surface: #ffffff;
+  --ink: #17211f;
+  --ink-2: #4f5b59;
+  --rule: #d3d9d5;
+  --teal: #1f5f6b;
+  --teal-hover: #184d57;
+  --teal-ink: #ffffff;
+  --cell-in: #fff2cc;
+  --cell-in-edge: #dcc25f;
+  --cell-out: #eaeff1;
+  --link: #1b5560;
+  --focus: #1f5f6b;
+
+  --wrap: 1120px;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121a1b;
+    --surface: #182224;
+    --ink: #e5eae8;
+    --ink-2: #a3aeab;
+    --rule: #2e3b3d;
+    --teal: #6fbac5;
+    --teal-hover: #8ccbd4;
+    --teal-ink: #0f1a1b;
+    --cell-in: #3a3318;
+    --cell-in-edge: #7a6a2a;
+    --cell-out: #1f2b2d;
+    --link: #8fcbd3;
+    --focus: #f2d77a;
+  }
+}
+
+/* ---------- base ---------- */
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 48em) {
+  body { font-size: 1.125rem; }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+p { margin: 0 0 1rem; }
+
+ul { padding-left: 1.25rem; }
+
+li { margin-bottom: 0.4rem; }
+
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h2 { font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2rem); }
+
+h3 { font-size: 1.3rem; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.skip:focus { left: 1rem; top: 1rem; z-index: 10; }
+
+.wrap {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.measure { max-width: 62ch; }
+
+.muted { color: var(--ink-2); }
+
+.small { font-size: 0.9rem; }
+
+/* ---------- header ---------- */
+
+.site-head { border-bottom: 1px solid var(--rule); }
+
+.site-head .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.85rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.wordmark svg { width: 1.4rem; height: 1.4rem; }
+
+.site-nav {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.site-nav a { color: var(--ink); text-decoration: none; }
+
+.site-nav a:hover { text-decoration: underline; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.15rem;
+  border: 1.5px solid var(--teal);
+  border-radius: 3px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.btn-solid {
+  background: var(--teal);
+  color: var(--teal-ink);
+}
+
+.btn-solid:hover {
+  background: var(--teal-hover);
+  border-color: var(--teal-hover);
+}
+
+.btn-line {
+  background: transparent;
+  color: var(--link);
+}
+
+.btn-line:hover { background: var(--cell-out); }
+
+/* ---------- hero ---------- */
+
+.hero .wrap {
+  display: grid;
+  gap: 2.25rem;
+  padding-block: clamp(2.5rem, 7vw, 5rem);
+}
+
+@media (min-width: 56em) {
+  .hero .wrap {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 1.2rem + 3.6vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 17ch;
+  margin-bottom: 1rem;
+}
+
+.hero-sub {
+  color: var(--ink-2);
+  font-size: clamp(1.1rem, 1rem + 0.6vw, 1.35rem);
+  line-height: 1.45;
+  max-width: 32ch;
+  margin-bottom: 1.5rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+/* The worked example. Same conventions as the workbook:
+   yellow = type here, grey and bold = result. */
+
+.ledger {
+  width: 100%;
+  max-width: 30rem;
+  border: 1px solid var(--rule);
+  border-collapse: collapse;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger th,
+.ledger td {
+  border: 1px solid var(--rule);
+  padding: 0.6rem 0.8rem;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.ledger th { color: var(--ink); }
+
+.ledger td {
+  min-width: 6.5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ledger .in { background: var(--cell-in); }
+
+.ledger .out {
+  background: var(--cell-out);
+  font-weight: 700;
+}
+
+.ledger .key th { font-weight: 700; }
+
+.ledger caption {
+  caption-side: bottom;
+  padding-top: 0.7rem;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* ---------- sections ---------- */
+
+.section .wrap { padding-block: clamp(2rem, 6vw, 4rem); }
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-head p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* products: each one is a ledger row, description left, amount right */
+
+.product {
+  display: grid;
+  gap: 1.25rem;
+  padding-block: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.product:last-of-type { border-bottom: 1px solid var(--rule); }
+
+@media (min-width: 56em) {
+  .product {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding-block: 2.75rem;
+  }
+}
+
+.shot { margin: 0; }
+
+.shot a {
+  display: block;
+  border-radius: 4px;
+}
+
+.shot img {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shot img { filter: brightness(0.9); }
+}
+
+.shot figcaption {
+  margin-top: 0.5rem;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}
+
+.product-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.price {
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.product p { margin: 0.75rem 0 0; }
+
+.facts {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.buy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+/* free sheet */
+
+.free .wrap {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 56em) {
+  .free .wrap {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+}
+
+.free h2 { margin-bottom: 1rem; }
+
+.signup {
+  min-height: 8rem;
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1.5px dashed var(--cell-in-edge);
+  border-radius: 4px;
+  background: var(--cell-in);
+}
+
+.signup-note {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+/* about */
+
+.about .wrap { padding-top: 0; }
+
+.about h2 { margin-bottom: 1rem; }
+
+/* ---------- inner pages (bonus, privacy, 404) ---------- */
+
+.page .wrap {
+  max-width: 46rem;
+  padding-block: clamp(2.5rem, 7vw, 4.5rem);
+}
+
+.page h1 {
+  font-size: clamp(1.9rem, 1.3rem + 2.6vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.page h2 {
+  font-size: 1.35rem;
+  margin: 2rem 0 0.6rem;
+}
+
+.page .lede {
+  color: var(--ink-2);
+  font-size: 1.15rem;
+  line-height: 1.45;
+}
+
+.pack {
+  display: grid;
+  gap: 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pack li {
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.pack h3 { margin-bottom: 0.4rem; }
+
+.pack p { margin: 0; }
+
+.pack p + p { margin-top: 0.5rem; }
+
+.page .signup { margin-top: 1.5rem; }
+
+/* ---------- footer ---------- */
+
+.site-foot {
+  margin-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.site-foot .wrap {
+  display: grid;
+  gap: 0.5rem;
+  padding-block: 2rem 2.5rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.site-foot p {
+  margin: 0;
+  max-width: 80ch;
+}
+
+.site-foot .legal {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.site-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
