@@ -476,3 +476,383 @@ h3 { font-size: 1.3rem; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* ---------- IFTA calculator (/ifta-calculator) ----------
+   Same cell conventions as the workbook: yellow = type here, grey and bold = result. */
+
+:root { --bad: #a8261b; }
+
+@media (prefers-color-scheme: dark) {
+  :root { --bad: #ff9a8f; }
+}
+
+[hidden] { display: none !important; }
+
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.kicker {
+  margin: 0 0 0.6rem;
+  color: var(--teal);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.rates-note {
+  margin: 1.25rem 0 0;
+  padding: 0.85rem 1rem;
+  border-left: 4px solid var(--teal);
+  background: var(--surface);
+  font-size: 0.95rem;
+}
+
+button.btn {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ifta-head { display: none; }
+
+.ifta-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "code code code"
+    "miles gallons remove"
+    "err err err";
+  gap: 0.5rem 0.6rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.ifta-field-code { grid-area: code; }
+.ifta-field-miles { grid-area: miles; }
+.ifta-field-gallons { grid-area: gallons; }
+.ifta-remove { grid-area: remove; align-self: end; }
+.ifta-line .ifta-err { grid-area: err; }
+
+.ifta-field { display: block; }
+
+.ifta-field .lbl {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}
+
+.ifta-field input,
+.ifta-field select,
+.optin input {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--cell-in-edge);
+  border-radius: 3px;
+  background: var(--cell-in);
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.ifta-field input { text-align: right; }
+
+[aria-invalid="true"] {
+  border-color: var(--bad) !important;
+  box-shadow: 0 0 0 2px var(--bad);
+}
+
+.ifta-err {
+  margin: 0;
+  color: var(--bad);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ifta-remove,
+.btn-text {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ifta-remove:hover { border-color: var(--ink-2); color: var(--ink); }
+
+.btn-text {
+  border-color: transparent;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.calc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--rule);
+}
+
+.calc-totals { margin-top: 1rem; }
+
+.calc-totals summary {
+  padding-block: 0.5rem;
+  color: var(--link);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calc-totals-fields {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 40em) {
+  .ifta-head,
+  .ifta-line {
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) 5.5rem;
+  }
+
+  .ifta-head {
+    display: grid;
+    gap: 0.6rem;
+    padding-bottom: 0.35rem;
+    color: var(--ink-2);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .ifta-head span:nth-child(2),
+  .ifta-head span:nth-child(3) { text-align: right; }
+
+  .ifta-line {
+    grid-template-areas:
+      "code miles gallons remove"
+      "err err err err";
+    padding: 0.3rem 0;
+    border-top: 0;
+  }
+
+  .ifta-line .lbl {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ifta-remove { align-self: stretch; }
+
+  .calc-actions { margin-top: 0.5rem; }
+
+  .calc-totals-fields { grid-template-columns: 1fr 1fr; }
+}
+
+.calc-summary {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.calc-notes {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.calc-notes:empty { display: none; }
+
+.calc-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 1.25rem 0;
+  border: 1px solid var(--rule);
+  background: var(--rule);
+}
+
+@media (min-width: 40em) {
+  .calc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.calc-stats div {
+  padding: 0.6rem 0.8rem;
+  background: var(--cell-out);
+}
+
+.calc-stats dt {
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}
+
+.calc-stats dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.calc-stats .key { background: var(--cell-in); }
+
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.calc-table caption {
+  caption-side: bottom;
+  padding-top: 0.6rem;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.calc-table th,
+.calc-table td {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.calc-table thead th {
+  background: var(--teal);
+  color: var(--teal-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.calc-table thead th:first-child,
+.calc-table tbody th,
+.calc-table tfoot th {
+  text-align: left;
+  white-space: normal;
+}
+
+.calc-table tbody th { font-weight: 600; }
+
+.calc-table tfoot th,
+.calc-table tfoot td {
+  background: var(--cell-out);
+  font-weight: 700;
+}
+
+/* Phones: each state becomes a small card of label / value pairs. */
+@media (max-width: 39.99em) {
+  .calc-table,
+  .calc-table tbody,
+  .calc-table tfoot,
+  .calc-table tr,
+  .calc-table th,
+  .calc-table td { display: block; }
+
+  .calc-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .calc-table caption {
+    display: block;
+    width: 100%;
+    padding: 0 0 0.6rem;
+  }
+
+  .calc-table tr {
+    margin-bottom: 0.6rem;
+    border: 1px solid var(--rule);
+  }
+
+  .calc-table th,
+  .calc-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .calc-table tbody th,
+  .calc-table tfoot th {
+    border-top: 0;
+    background: var(--cell-out);
+  }
+
+  .calc-table td::before {
+    content: attr(data-label);
+    color: var(--ink-2);
+    font-weight: 400;
+    text-align: left;
+  }
+
+  .calc-table .calc-skip { display: none; }
+}
+
+.optin-box { margin-top: 2.5rem; }
+
+.optin label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.optin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.optin-row input {
+  flex: 1 1 14rem;
+  width: auto;
+  background: var(--surface);
+}
+
+.optin-note {
+  margin: 0.75rem 0 0;
+  font-weight: 600;
+}
+
+.faq h3 {
+  margin: 1.5rem 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+/* /ifta-thanks */
+
+.offer {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.offer ul { margin: 0 0 1.25rem; }
