@@ -59,9 +59,11 @@ The calculator is built on the local branch `ifta-calculator`. These are hard pr
 3. **Incentive email with the checklist**: the form's confirmation (incentive) email turned on, with
    `rigledger/products/ifta-checklist/RigLedger-IFTA-Quarter-End-Checklist.pdf` as the download. `/ifta-thanks` tells
    the subscriber the button in that email confirms them and downloads the checklist.
-4. **All four 2027 reminder broadcasts, scheduled now**, each to the tag `source:ifta-calculator`, with `IFTA` in the
-   subject, sent 10 days before the weekend-shifted due date (`python ledger/ifta_reminders_check.py plan 2027` in the
-   rigledger repo prints these):
+4. **All four 2027 reminder broadcasts, scheduled now**, each to the tag `source:ifta-calculator` alone (no second tag,
+   segment or exclusion). A reminder's subject contains `IFTA` and `due` or `reminder`, never `rates` (the reminder
+   check enforces both; the drafts in rigledger `marketing/emails/ifta-funnel/README.md` already comply). Each goes out
+   10 days before the weekend-shifted due date (`python ledger/ifta_reminders_check.py plan 2027` in the rigledger repo
+   prints these):
 
    | Return | Due | Send the reminder | Schedule by |
    |---|---|---|---|
@@ -90,8 +92,9 @@ The calculator is built on the local branch `ifta-calculator`. These are hard pr
    ExecStart=/usr/bin/python3 %h/rigledger/ledger/ifta_reminders_check.py
    ```
 
-   Give the timer an Uptime Kuma heartbeat like the other Jarvis timers, or have the 06:40 sentinel watch
-   `ifta-reminders-status.json` for staleness the way it watches the drip's status, so a dead check is noticed too.
+   Then set `REMINDERS_LIVE_FROM = date(<go-live day>)` in jarvis `nas/income/rigledger_check.py`, commit, and pull it
+   on the NAS. The 06:40 sentinel already reads `ifta-reminders-status.json`: it warns when the check goes stale (36 h)
+   and, from that date on, every Monday it has never run. Left at `None`, a check that was never deployed stays silent.
 7. Swap `TODO` for the form id on the branch and run **one real test signup** from the local server (see Local
    preview): the browser moves to `/ifta-thanks` (the local server 404s on that extension-less path; GitHub Pages
    serves it), the subscriber shows in Kit with the tag, the confirmation email arrives, and its button downloads the
