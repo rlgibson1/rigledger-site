@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://app.kit.com; form-action 'self' https://app.kit.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
 <meta name="color-scheme" content="light dark">
 <title>Free IFTA Calculator (3Q 2026 rates) | RigLedger</title>
 <meta name="description" content="Free IFTA fuel tax calculator with 3rd Quarter 2026 rates for all 58 jurisdictions. Enter miles and gallons by state to see fleet MPG, tax or credit per state, and the KY and VA surcharges.">
@@ -18,7 +19,8 @@
   shared in trucking communities that bar store links. The one offer lives on /ifta-thanks, after the opt-in.
   Quarterly refresh: re-run rigledger/marketing/site/export_ifta_rates.py (the calculator and the dates in the body
   update from ifta-rates.json), then update the quarter named in <title>, the meta and og descriptions, the JSON-LD,
-  the eyebrow, and the surcharge and rates FAQ answers. README.md has the list.
+  the eyebrow, the rates note's not-final-yet sentence, the opt-in's rates bullet, and the due-date, surcharge and
+  rates FAQ answers. README.md has the list.
 -->
 <script type="application/ld+json">
 {
@@ -47,12 +49,17 @@
         {
           "@type": "Question",
           "name": "How is IFTA calculated?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Each state gets tax on the fuel you burned there, at its own rate. Fleet MPG is your total miles divided by your total gallons for the quarter. A state's taxable gallons are your miles there divided by fleet MPG. Subtract the gallons you bought in that state and multiply what's left by its rate. A positive number means you owe that state, a negative one is a credit, and your base state nets every line into one payment or refund." }
+          "acceptedAnswer": { "@type": "Answer", "text": "Each state gets tax on the fuel you burned there, at its own rate. Fleet MPG is your total miles divided by your total gallons for the quarter. A state's taxable gallons are your taxable miles there divided by fleet MPG. Subtract the tax-paid gallons you bought in that state and multiply what's left by its rate. A positive number means you owe that state and a negative one is a credit. Credits offset what you owe other states on the same return (R1120.200). If the whole return comes out as a credit, it carries forward to later returns for up to eight quarters unless you ask your base state for a refund (R1110, R1120.100)." }
+        },
+        {
+          "@type": "Question",
+          "name": "Which gallons go on a state's line?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Only tax-paid gallons: fuel that went into the truck's tank with that state's fuel tax in the price, from a pump or from your own tax-paid bulk tank there (R1010.100, R1020.200). On the return that column is \"Tax paid volume\" (Procedures Manual P720.500.030). Fuel with no tax paid on it, such as untaxed bulk fuel, earns no credit in any state, so leave it off the state lines and add it to the total gallons under \"My totals are bigger than these lines\". Fleet MPG still counts it." }
         },
         {
           "@type": "Question",
           "name": "What is fleet MPG, and which miles count?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Fleet MPG is your total miles in every jurisdiction divided by the total gallons you put in the truck's fuel tanks, for the whole quarter. Every mile counts, deadhead and personal miles included. If you also ran miles outside IFTA (Alaska, the Canadian territories, or Mexico), open \"My totals are bigger than these lines\" and type your real totals, because fleet MPG uses all of them. Fuel for a separate reefer tank isn't fuel that moves the truck, so leave it out." }
+          "acceptedAnswer": { "@type": "Answer", "text": "Fleet MPG is your total miles in every jurisdiction divided by the total gallons you put in the truck's fuel tanks, for the whole quarter. Every mile counts, deadhead and personal miles included. The calculator treats the miles on each state's line as taxable there. If you also ran miles outside IFTA (Alaska, Washington, D.C., the Canadian territories, or Mexico), or a state exempts some of your miles, leave those off the state lines, open \"My totals are bigger than these lines\" and type your real totals, because fleet MPG uses all of them. Fuel for a separate reefer tank isn't fuel that moves the truck, so leave it out." }
         },
         {
           "@type": "Question",
@@ -72,7 +79,7 @@
         {
           "@type": "Question",
           "name": "When is IFTA due?",
-          "acceptedAnswer": { "@type": "Answer", "text": "On the last day of the month after each quarter ends: 1st quarter (January to March) by April 30, 2nd (April to June) by July 31, 3rd (July to September) by October 31, and 4th (October to December) by January 31. If that day is a Saturday, Sunday, or legal holiday, the next business day is the due date (R960). A quarter with no miles still needs a return while your license is active (R930.100)." }
+          "acceptedAnswer": { "@type": "Answer", "text": "On the last day of the month after each quarter ends: 1st quarter (January to March) by April 30, 2nd (April to June) by July 31, 3rd (July to September) by October 31, and 4th (October to December) by January 31. If that day is a Saturday, Sunday, or legal holiday, the next business day is the due date (R960.100). That's why the 3rd quarter 2026 return is due Monday, November 2, 2026 (October 31 is a Saturday) and the 4th quarter 2026 return is due Monday, February 1, 2027 (January 31 is a Sunday). A quarter with no miles still needs a return while your license is active (R930.100)." }
         },
         {
           "@type": "Question",
@@ -82,12 +89,12 @@
         {
           "@type": "Question",
           "name": "Which rates does this calculator use?",
-          "acceptedAnswer": { "@type": "Answer", "text": "The 3rd Quarter 2026 diesel rates (the Special Diesel column) and surcharges for all 58 IFTA jurisdictions, from the IFTA, Inc. tax rate matrix. Rates change every quarter. When the next quarter's rates post, this page is updated to them." }
+          "acceptedAnswer": { "@type": "Answer", "text": "The 3rd Quarter 2026 diesel rates (the Special Diesel column) and surcharges for all 58 IFTA jurisdictions, from the IFTA, Inc. tax rate matrix. Rates change every quarter. The 4th Quarter 2026 rates aren't final yet; this page moves to them when IFTA finalizes them (expected early December). Until then, treat a 4th quarter result as an estimate." }
         },
         {
           "@type": "Question",
           "name": "Is this the number I file?",
-          "acceptedAnswer": { "@type": "Answer", "text": "It's the same fleet-MPG math the return uses, run on the numbers you type, so it's only as good as your miles and receipts. Your base state's return or online portal does the official calculation. Use this to check your numbers and know where you stand before you file." }
+          "acceptedAnswer": { "@type": "Answer", "text": "It's the same fleet-MPG math the return uses, run on the numbers you type, so it's only as good as your miles and receipts. The official return rounds fleet MPG to two decimals and each state's figures to whole units (P720.350, P720.500), so the numbers you file can differ from these by a few dollars. Your base state's return or online portal does the official calculation. Use this to check your numbers and know where you stand before you file." }
         }
       ]
     }
@@ -113,15 +120,16 @@
     <h1>Don't hand any state a dollar more IFTA than you owe.</h1>
     <p class="lede">Type in the miles you ran and the gallons you bought in each state. You'll see your fleet MPG, the tax or credit for every state, and the total for your return, Kentucky and Virginia surcharges included. Free, and there's nothing to sign up for.</p>
 
-    <p class="rates-note"><strong>Rates loaded: <span data-rates="quarter_label">3rd Quarter 2026</span></strong> (<span data-rates="period">July 1 to September 30, 2026</span>, the return due <span data-rates="return_due">October 31, 2026</span>), from the IFTA, Inc. tax rate matrix. Rates change every quarter, so for any other quarter treat these numbers as an estimate until its rates are loaded here.</p>
+    <p class="rates-note"><strong>Rates loaded: <span data-rates="quarter_label">3rd Quarter 2026</span></strong> (<span data-rates="period">July 1 to September 30, 2026</span>), for the return due <span data-rates="return_due">Monday, November 2, 2026</span>, from the IFTA, Inc. tax rate matrix. The 4th Quarter 2026 rates aren't final yet (IFTA expects them in early December), so for a 4th quarter return treat these numbers as an estimate until they're loaded here.</p>
 
     <h2 id="calc-heading">Your quarter</h2>
     <p id="ifta-loading" class="muted" role="status">Loading the rate table...</p>
     <noscript><p class="rates-note">The calculator needs JavaScript turned on. If you'd rather work it by hand, the questions below walk through the same math.</p></noscript>
 
     <form id="ifta-form" class="calc" aria-labelledby="calc-heading" novalidate hidden>
+      <p class="calc-help small muted">Miles and US gallons in, US dollars out. Diesel rates only. Put only tax-paid gallons on a state's line (fuel with that state's tax in the price). Fuel bought without the tax goes in the totals box below.</p>
       <div class="ifta-head" aria-hidden="true">
-        <span>State or province</span><span>Miles</span><span>Gallons bought</span><span></span>
+        <span>State or province</span><span>Miles</span><span>Tax-paid gallons bought</span><span></span>
       </div>
       <div id="ifta-lines"></div>
 
@@ -133,7 +141,7 @@
 
       <details id="ifta-totals" class="calc-totals">
         <summary>My totals are bigger than these lines</summary>
-        <p class="small muted">Fleet MPG uses every mile and every gallon for the quarter. If you also ran miles outside IFTA (Alaska, the Canadian territories, or Mexico), type your real totals here. Leave a box blank and the calculator adds up the lines above.</p>
+        <p class="small muted">Fleet MPG uses every mile and every gallon for the quarter. Type your real totals here if they're bigger than the lines above: miles outside IFTA (Alaska, Washington, D.C., the Canadian territories, or Mexico), miles a state exempts (leave those off its line, because each line's miles count as taxable there), and fuel bought without the tax in the price, such as untaxed bulk fuel. Leave a box blank and the calculator adds up the lines above.</p>
         <div class="calc-totals-fields">
           <label class="ifta-field"><span class="lbl">Total miles, all jurisdictions</span><input type="text" id="ifta-total-miles" inputmode="decimal" autocomplete="off" aria-describedby="ifta-totals-err"></label>
           <label class="ifta-field"><span class="lbl">Total gallons, all jurisdictions</span><input type="text" id="ifta-total-gallons" inputmode="decimal" autocomplete="off" aria-describedby="ifta-totals-err"></label>
@@ -144,7 +152,8 @@
 
     <section id="ifta-results" class="calc-results" aria-labelledby="results-heading" hidden>
       <h2 id="results-heading">Your numbers</h2>
-      <p id="ifta-summary" class="calc-summary" tabindex="-1" aria-live="polite">Your numbers show up here as you type.</p>
+      <p id="ifta-summary" class="calc-summary" tabindex="-1">Your numbers show up here as you type.</p>
+      <p id="ifta-live" class="vh" aria-live="polite"></p>
       <p id="ifta-summary-sub" class="muted"></p>
       <ul id="ifta-notes" class="calc-notes"></ul>
 
@@ -159,7 +168,7 @@
         </dl>
 
         <table class="calc-table" role="table">
-          <caption>By state. Taxable gallons = miles there divided by fleet MPG. Net gallons = taxable gallons minus gallons bought there. A minus sign is a credit.</caption>
+          <caption>By state. Taxable gallons = miles there divided by fleet MPG. Net gallons = taxable gallons minus tax-paid gallons bought there. A minus sign is a credit.</caption>
           <thead>
             <tr role="row">
               <th scope="col" role="columnheader">State</th>
@@ -183,24 +192,26 @@
           </tfoot>
         </table>
       </div>
+      <p class="small muted calc-disclaimer">Planning and record-keeping tool. Not tax, legal, or engineering advice.</p>
     </section>
 
     <section class="optin-box" aria-labelledby="optin-heading">
       <h2 id="optin-heading">Get a heads-up 10 days before every IFTA deadline</h2>
       <p>IFTA has a way of showing up two days before it's due, right when you're out on a run. Leave your email and you'll get:</p>
       <ul>
-        <li><strong>A reminder 10 days before each deadline:</strong> January 31, April 30, July 31 and October 31. Time to pull your miles and receipts together without a late night at the kitchen table.</li>
-        <li><strong>The new rates as soon as IFTA posts them,</strong> so you're not figuring this quarter on last quarter's numbers.</li>
-        <li><strong>A one-page quarter-end filing checklist,</strong> so nothing's missing when you sit down to file.</li>
+        <li><strong>A reminder about 10 days before each quarterly deadline,</strong> the last day of January, April, July and October (or the next business day when that falls on a weekend). Time to pull your miles and receipts together without a late night at the kitchen table.</li>
+        <li><strong>The new rates each quarter when IFTA finalizes them,</strong> so you're not figuring this quarter on last quarter's numbers. The 4th Quarter 2026 rates are expected in early December.</li>
+        <li><strong>A one-page quarter-end filing checklist</strong> to download as soon as you confirm your email, so nothing's missing when you sit down to file.</li>
       </ul>
       <!--
         KIT_FORM_IFTA_REMINDERS: a NEW Kit form must be created by Jarvis/Ryan before this goes live (it is not the
         Cost Per Mile Lite form). Email field only, tag source:ifta-calculator, incentive = the one-page quarter-end
         IFTA filing checklist, and set its after-subscribe redirect to https://rigledger.gsa-company.com/ifta-thanks.
-        Then replace TODO in data-kit-form below with that form's numeric id (the number in its Kit URL,
-        app.kit.com/forms/<id>/...). That one attribute is the whole swap: ifta-calc.js posts to
-        https://app.kit.com/forms/<id>/subscriptions and sends the subscriber to /ifta-thanks. While it says TODO a
-        submit only shows a "list opens soon" note and sends nothing.
+        The bullets above promise the checklist, the reminders and the new-rates email, so README "Going live" lists
+        them as hard prerequisites: do those first. Then replace TODO in data-kit-form below with that form's numeric
+        id (the number in its Kit URL, app.kit.com/forms/<id>/...). That one attribute is the whole swap: ifta-calc.js
+        posts to https://app.kit.com/forms/<id>/subscriptions and sends the subscriber to /ifta-thanks only when Kit
+        answers status "success". While it says TODO a submit only shows a "list opens soon" note and sends nothing.
       -->
       <div class="signup" id="ifta-reminder-form">
         <form id="ifta-optin" class="optin" method="post" data-kit-form="TODO">
@@ -222,10 +233,13 @@
       <p>You need an IFTA license if you run a qualified motor vehicle in two or more member jurisdictions: the 48 contiguous states and the 10 Canadian provinces. A qualified motor vehicle has two axles and a gross or registered weight over 26,000 lb, or three or more axles at any weight, or runs in a combination over 26,000 lb (IFTA Articles of Agreement, R245). You file one return a quarter with your base state, and it settles with the others.</p>
 
       <h3>How is IFTA calculated?</h3>
-      <p>Each state gets tax on the fuel you burned there, at its own rate. Fleet MPG is your total miles divided by your total gallons for the quarter. A state's taxable gallons are your miles there divided by fleet MPG. Subtract the gallons you bought in that state and multiply what's left by its rate. A positive number means you owe that state, a negative one is a credit, and your base state nets every line into one payment or refund.</p>
+      <p>Each state gets tax on the fuel you burned there, at its own rate. Fleet MPG is your total miles divided by your total gallons for the quarter. A state's taxable gallons are your taxable miles there divided by fleet MPG. Subtract the tax-paid gallons you bought in that state and multiply what's left by its rate. A positive number means you owe that state and a negative one is a credit. Credits offset what you owe other states on the same return (R1120.200). If the whole return comes out as a credit, it carries forward to later returns for up to eight quarters unless you ask your base state for a refund (R1110, R1120.100).</p>
+
+      <h3>Which gallons go on a state's line?</h3>
+      <p>Only tax-paid gallons: fuel that went into the truck's tank with that state's fuel tax in the price, from a pump or from your own tax-paid bulk tank there (R1010.100, R1020.200). On the return that column is "Tax paid volume" (Procedures Manual P720.500.030). Fuel with no tax paid on it, such as untaxed bulk fuel, earns no credit in any state, so leave it off the state lines and add it to the total gallons under "My totals are bigger than these lines". Fleet MPG still counts it.</p>
 
       <h3>What is fleet MPG, and which miles count?</h3>
-      <p>Fleet MPG is your total miles in every jurisdiction divided by the total gallons you put in the truck's fuel tanks, for the whole quarter. Every mile counts, deadhead and personal miles included. If you also ran miles outside IFTA (Alaska, the Canadian territories, or Mexico), open "My totals are bigger than these lines" and type your real totals, because fleet MPG uses all of them. Fuel for a separate reefer tank isn't fuel that moves the truck, so leave it out.</p>
+      <p>Fleet MPG is your total miles in every jurisdiction divided by the total gallons you put in the truck's fuel tanks, for the whole quarter. Every mile counts, deadhead and personal miles included. The calculator treats the miles on each state's line as taxable there. If you also ran miles outside IFTA (Alaska, Washington, D.C., the Canadian territories, or Mexico), or a state exempts some of your miles, leave those off the state lines, open "My totals are bigger than these lines" and type your real totals, because fleet MPG uses all of them. Fuel for a separate reefer tank isn't fuel that moves the truck, so leave it out.</p>
 
       <h3>Why do Kentucky and Virginia cost more?</h3>
       <p>On the 3rd Quarter 2026 matrix they add a surcharge on top of the fuel tax: taxable gallons times the surcharge rate. Fuel you buy in those states earns no credit against it, so the surcharge is owed even if every gallon you burned there was bought there. Indiana's surcharge line is $0 on this quarter's matrix.</p>
@@ -237,16 +251,16 @@
       <p>It's a credit. You bought more fuel in that state than you burned there, so you already paid it more tax at the pump than your miles there owe. Credits offset what you owe other states on the same return.</p>
 
       <h3>When is IFTA due?</h3>
-      <p>On the last day of the month after each quarter ends: 1st quarter (January to March) by April 30, 2nd (April to June) by July 31, 3rd (July to September) by October 31, and 4th (October to December) by January 31. If that day is a Saturday, Sunday, or legal holiday, the next business day is the due date (R960). A quarter with no miles still needs a return while your license is active (R930.100).</p>
+      <p>On the last day of the month after each quarter ends: 1st quarter (January to March) by April 30, 2nd (April to June) by July 31, 3rd (July to September) by October 31, and 4th (October to December) by January 31. If that day is a Saturday, Sunday, or legal holiday, the next business day is the due date (R960.100). That's why the 3rd quarter 2026 return is due Monday, November 2, 2026 (October 31 is a Saturday) and the 4th quarter 2026 return is due Monday, February 1, 2027 (January 31 is a Sunday). A quarter with no miles still needs a return while your license is active (R930.100).</p>
 
       <h3>What should I keep in case of an audit?</h3>
       <p>Keep everything for four years from the due date or the date you filed, whichever is later (IFTA Procedures Manual, P510). For each trip: start and end dates, origin and destination, route, beginning and ending odometer readings, total miles, miles in each jurisdiction, and the unit number (P540.100). For each fuel purchase: a receipt showing the date, the seller's name and address, gallons, fuel type, price, the unit it went into, and the buyer's name (P550.300). An altered or unreadable receipt earns no credit, and thermal paper fades, so photograph receipts the day you get them. If an ELD or GPS keeps your miles, check that it exports the position records as a spreadsheet or CSV; a PDF report doesn't count (P540.200).</p>
 
       <h3>Which rates does this calculator use?</h3>
-      <p>The 3rd Quarter 2026 diesel rates (the Special Diesel column) and surcharges for all 58 IFTA jurisdictions, from the IFTA, Inc. tax rate matrix. Rates change every quarter. When the next quarter's rates post, this page is updated to them.</p>
+      <p>The 3rd Quarter 2026 diesel rates (the Special Diesel column) and surcharges for all 58 IFTA jurisdictions, from the IFTA, Inc. tax rate matrix. Rates change every quarter. The 4th Quarter 2026 rates aren't final yet; this page moves to them when IFTA finalizes them (expected early December). Until then, treat a 4th quarter result as an estimate.</p>
 
       <h3>Is this the number I file?</h3>
-      <p>It's the same fleet-MPG math the return uses, run on the numbers you type, so it's only as good as your miles and receipts. Your base state's return or online portal does the official calculation. Use this to check your numbers and know where you stand before you file.</p>
+      <p>It's the same fleet-MPG math the return uses, run on the numbers you type, so it's only as good as your miles and receipts. The official return rounds fleet MPG to two decimals and each state's figures to whole units (P720.350, P720.500), so the numbers you file can differ from these by a few dollars. Your base state's return or online portal does the official calculation. Use this to check your numbers and know where you stand before you file.</p>
     </section>
 
     <p class="small muted">Questions about the calculator: <a href="mailto:sales@gsa-company.com">sales@gsa-company.com</a>. We reply within 48 hours.</p>

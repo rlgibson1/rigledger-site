@@ -1,7 +1,9 @@
 /* RigLedger IFTA calculator.
-   computeIfta() is the fleet-MPG method from the Owner-Operator Business Workbook, kept pure so the parity
-   harness (rigledger/harness/ifta_calc_parity.py) can run it under Node against the Python model it mirrors
-   (harness/models/trucking.py, ifta()). Browser: window.RigLedgerIfta. Node: require("./ifta-calc.js"). */
+   The first module is DOM-free: computeIfta() is the fleet-MPG method from the Owner-Operator Business Workbook,
+   plus the page's input rules (parseAmount), its headline (summarize) and its reading of Kit's reply (kitResult).
+   The parity harness (rigledger/harness/ifta_calc_parity.py) runs computeIfta under Node against the Python model it
+   mirrors (harness/models/trucking.py, ifta()); rigledger/harness/ifta_calc_page.test.js covers the rest.
+   Browser: window.RigLedgerIfta. Node: require("./ifta-calc.js"). */
 (function (root, factory) {
   var api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
@@ -9,25 +11,58 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  var MAX_AMOUNT = 1000000;
+  // Digits with an optional decimal point. Thousands commas only in full groups of three: 6,500 yes, 6,5 no.
+  var PLAIN = /^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?$|^\.\d+$/;
+  var MPG_LOW = 3, MPG_HIGH = 15;
+  var LINE_NAMES = { miles: "Miles", gallons: "Tax-paid gallons" };
+  var TOTAL_NAMES = { miles: "Total miles", gallons: "Total gallons" };
+
+  var money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+  var dec2 = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function cents(x) { return Math.abs(x) < 0.005 ? 0 : x; } // no "-$0.00"
+  function usd(x) { return money.format(cents(x)); }
+
   function blank(v) {
-    return v === undefined || v === null || v === "";
+    return v === undefined || v === null || (typeof v === "string" && v.trim() === "");
   }
 
-  // Blank counts as 0; anything else must be a finite number of 0 or more.
+  /* A typed amount (or a number) -> {value} or {error}; blank is 0. The error reads after the field's name
+     ("Miles can't be negative."). Plain numbers only, so 1e3, 0x10 and 6,5 are refused instead of being read as
+     1000, 16 and 65. */
+  function parseAmount(v) {
+    if (blank(v)) return { value: 0 };
+    var n;
+    if (typeof v === "number") n = v;
+    else {
+      var s = String(v).trim(), neg = s.charAt(0) === "-";
+      if (neg) s = s.slice(1).trim();
+      if (!PLAIN.test(s)) {
+        return { error: /^\d+,\d{1,2}$/.test(s) ? "need a period for decimals, like 6.5." : "must be digits only, like 6500 or 6,500." };
+      }
+      n = Number(s.replace(/,/g, ""));
+      if (neg && n) n = -n;
+    }
+    if (!isFinite(n)) return { error: "must be a number." };
+    if (n < 0) return { error: "can't be negative." };
+    if (n > MAX_AMOUNT) return { error: "can't be over 1,000,000. Check the number." };
+    return { value: n };
+  }
+
   function checkAmount(v, where, field, errors) {
-    if (blank(v)) return 0;
-    var n = typeof v === "number" ? v : Number(v);
-    if (!isFinite(n)) errors.push({ row: where, field: field, message: "Enter a number." });
-    else if (n < 0) errors.push({ row: where, field: field, message: "Can't be negative." });
-    else return n;
+    var p = parseAmount(v);
+    if (p.error === undefined) return p.value;
+    errors.push({ row: where, field: field, message: (where === "totals" ? TOTAL_NAMES : LINE_NAMES)[field] + " " + p.error });
     return 0;
   }
 
   /* rates:  the ifta-rates.json object (or its rows array): [{code, name, diesel, surcharge}]
-     rows:   [{code, miles, gallons}], one per line the driver typed; blank amounts count as 0
-     totals: optional {miles, gallons}; a blank field means "add up the rows" (an override covers non-IFTA miles)
+     rows:   [{code, miles, gallons}], one per line the driver typed; amounts are numbers or typed text, blank is 0
+     totals: optional {miles, gallons}; a blank field means "add up the rows" (an override covers non-IFTA miles,
+             exempt miles and fuel bought without the tax)
      Returns {ok, errors, warnings, rows, totalMiles, totalGallons, fleetMpg, taxTotal, surchargeTotal, netTotal,
-     jurisdictions}. Negative totals are credits. Rows with no jurisdiction and no amounts are skipped. */
+     jurisdictions}. Negative totals are credits. Rows with no jurisdiction and no amounts are skipped, and a
+     jurisdiction with no miles or gallons isn't counted. */
   function computeIfta(rates, rows, totals) {
     var list = Array.isArray(rates) ? rates : rates.rows;
     var byCode = {};
@@ -58,7 +93,7 @@
       if (!r) return;
       sumMiles += r.miles;
       sumGallons += r.gallons;
-      codes[r.code] = true;
+      if (r.miles || r.gallons) codes[r.code] = true;
     });
     var tm = overrideMiles ? tmOver : sumMiles;
     var tg = overrideGallons ? tgOver : sumGallons;
@@ -66,8 +101,7 @@
 
     if (overrideMiles && tm < sumMiles) warnings.push("Your total miles are less than the miles you entered by state.");
     if (overrideGallons && tg < sumGallons) warnings.push("Your total gallons are less than the gallons you entered by state.");
-    if (!tg && tm) warnings.push("With no gallons there is no fleet MPG, so every state shows $0. Add the gallons you bought.");
-    if (!tm && tg) warnings.push("With no miles there is no fleet MPG, so the fuel you bought shows as credit. Add your miles.");
+    if (mpg && (mpg < MPG_LOW || mpg > MPG_HIGH)) warnings.push("That's " + dec2.format(mpg) + " MPG. Most trucks run 5-8. Check your gallons.");
 
     var taxTotal = 0, surchargeTotal = 0;
     var out = clean.map(function (r) {
@@ -94,7 +128,65 @@
     };
   }
 
-  return { computeIfta: computeIfta };
+  /* The headline for a computeIfta() result: {text, sub, notes, detail}. detail is false while there is nothing
+     worth tabling (no input yet, miles without gallons or the reverse, or an error). rows: the rows computeIfta got,
+     so an error can name its line ("Line 2, Texas: ..."). */
+  function summarize(res, rates, rows) {
+    var list = Array.isArray(rates) ? rates : rates.rows, byCode = {};
+    list.forEach(function (r) { byCode[r.code] = r; });
+    function waiting(text) { return { text: text, sub: "", notes: [], detail: false }; }
+
+    if (!res.ok) {
+      var order = [], byLine = {};
+      res.errors.forEach(function (e) {
+        var key = String(e.row);
+        if (!byLine[key]) {
+          var r = e.row === "totals" ? null : byCode[rows[e.row] && rows[e.row].code];
+          byLine[key] = [e.row === "totals" ? "Totals box:" : "Line " + (e.row + 1) + (r ? ", " + r.name : "") + ":"];
+          order.push(key);
+        }
+        byLine[key].push(e.message);
+      });
+      var parts = order.slice(0, 3).map(function (k) { return byLine[k].join(" "); });
+      if (order.length > 3) parts.push("And " + (order.length - 3) + " more lines to fix.");
+      return waiting(parts.join(" "));
+    }
+
+    var lines = res.rows.filter(function (l) { return l && (l.miles || l.gallons); });
+    if (!res.totalMiles && !res.totalGallons) return waiting("Your numbers show up here as you type.");
+    if (!res.totalGallons) return waiting("Add your gallons to see your numbers.");
+    if (!res.totalMiles) return waiting("Add your miles to see your numbers.");
+    if (!lines.length) return waiting("Add your miles and gallons by state to see your numbers.");
+
+    var n = res.jurisdictions;
+    var province = lines.some(function (l) { return byCode[l.code].country === "CA"; });
+    var noun = province ? (n === 1 ? "jurisdiction" : "jurisdictions") : (n === 1 ? "state" : "states");
+    var where = (n === 1 ? " in 1 " : " across " + n + " ") + noun + ".";
+    var text;
+    if (res.netTotal >= 0.005) text = "You owe about " + usd(res.netTotal) + where;
+    else if (res.netTotal <= -0.005) text = "You have about " + usd(-res.netTotal) + " in credit" + where;
+    else text = "You come out about even" + where;
+
+    var surNames = [];
+    lines.forEach(function (l) { if (l.surcharge >= 0.005 && surNames.indexOf(l.name) < 0) surNames.push(l.name); });
+    var sub = surNames.length ? "That includes " + usd(res.surchargeTotal) + " in " + surNames.join(" and ") +
+      " surcharge" + (surNames.length > 1 ? "s" : "") + ", owed on every gallon burned there." : "";
+    return { text: text, sub: sub, notes: res.warnings.slice(), detail: true };
+  }
+
+  /* What to do with Kit's reply to the form post. Kit's own embed script (ck.5.js) reads the same JSON: status
+     "success" is a subscriber, "quarantined" means Kit wants its bot check, anything else carries errors.messages.
+     -> {action: "thanks"} | {action: "post"} (plain form post, so Kit runs its own check) | {action: "error", message} */
+  function kitResult(httpOk, data) {
+    var status = data && data.status;
+    if (httpOk && status === "success") return { action: "thanks" };
+    if (httpOk && status === "quarantined") return { action: "post" };
+    var msgs = data && data.errors && Array.isArray(data.errors.messages) ?
+      data.errors.messages.filter(function (m) { return typeof m === "string" && m.trim(); }) : [];
+    return { action: "error", message: msgs.length ? msgs.join(" ") : "That didn't go through. Check the address and try again." };
+  }
+
+  return { computeIfta: computeIfta, parseAmount: parseAmount, summarize: summarize, kitResult: kitResult, usd: usd };
 });
 
 /* Page wiring for /ifta-calculator. Does nothing under Node or on a page without the calculator. */
@@ -112,17 +204,18 @@
   var totalsBox = document.getElementById("ifta-totals");
   var results = document.getElementById("ifta-results");
   var summary = document.getElementById("ifta-summary");
-  var rates = null, state = null;
+  var live = document.getElementById("ifta-live");
+  var rates = null, state = null, liveTimer = null;
 
-  var money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+  var usd = RigLedgerIfta.usd;
   var dec2 = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   var whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
   var longDate = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+  var dayDate = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
-  function cents(x) { return Math.abs(x) < 0.005 ? 0 : x; } // no "-$0.00"
-  function usd(x) { return money.format(cents(x)); }
-  function gal(x) { return dec2.format(cents(x)); }
-  function isoDate(s) { var p = s.split("-"); return longDate.format(new Date(Date.UTC(+p[0], p[1] - 1, +p[2]))); }
+  function gal(x) { return dec2.format(Math.abs(x) < 0.005 ? 0 : x); }
+  function utc(s) { var p = s.split("-"); return new Date(Date.UTC(+p[0], p[1] - 1, +p[2])); }
+  function isoDate(s) { return longDate.format(utc(s)); }
   function blankLine() { return { code: "", miles: "", gallons: "" }; }
   function fresh() { return { lines: [blankLine(), blankLine(), blankLine()], totals: { miles: "", gallons: "" }, totalsOpen: false }; }
   function str(v) { return typeof v === "string" ? v : ""; }
@@ -154,12 +247,6 @@
       !!(state.totals.miles.trim() || state.totals.gallons.trim());
   }
 
-  // Typed text -> what computeIfta expects: "" stays blank, commas and spaces are ignored, junk becomes NaN.
-  function amount(s) {
-    s = s.trim().replace(/[,\s]/g, "");
-    return s === "" ? "" : Number(s);
-  }
-
   function options(select) {
     select.appendChild(el("option", { value: "" }, "Choose..."));
     [["US", "U.S. states"], ["CA", "Canadian provinces"]].forEach(function (g) {
@@ -177,7 +264,7 @@
       var n = i + 1, id = "ifta-line-" + n;
       var row = el("div", { "class": "ifta-line", role: "group", "aria-labelledby": id + "-name", "data-index": i });
       row.appendChild(el("span", { "class": "vh", id: id + "-name" }, "Line " + n));
-      [["code", "State or province", "select"], ["miles", "Miles", "input"], ["gallons", "Gallons bought", "input"]]
+      [["code", "State or province", "select"], ["miles", "Miles", "input"], ["gallons", "Tax-paid gallons bought", "input"]]
         .forEach(function (f) {
           var label = el("label", { "class": "ifta-field ifta-field-" + f[0] });
           label.appendChild(el("span", { "class": "lbl" }, f[1]));
@@ -217,8 +304,7 @@
       }
       if (input) input.setAttribute("aria-invalid", "true");
       if (msg) {
-        var what = e.field === "code" ? "" : (e.field === "miles" ? "Miles: " : "Gallons: ");
-        msg.textContent = (msg.textContent ? msg.textContent + " " : "") + what + e.message;
+        msg.textContent = (msg.textContent ? msg.textContent + " " : "") + e.message;
         msg.hidden = false;
       }
     });
@@ -231,39 +317,26 @@
   }
   function setText(id, text) { document.getElementById(id).textContent = text; }
 
-  function show(res) {
+  // The visible summary changes as you type; the screen-reader copy waits until typing stops, so it reads once.
+  function announce(text) {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(function () { live.textContent = text; }, 600);
+  }
+
+  function show(res, rows, speak) {
     var detail = document.getElementById("ifta-detail");
     var notes = document.getElementById("ifta-notes");
-    setText("ifta-summary-sub", "");
+    var s = RigLedgerIfta.summarize(res, rates, rows);
+    summary.textContent = s.text;
+    setText("ifta-summary-sub", s.sub);
     notes.textContent = "";
-    if (!res.ok) {
-      summary.textContent = "Fix the highlighted box" + (res.errors.length > 1 ? "es" : "") + " to see your numbers.";
-      detail.hidden = true;
-      return;
-    }
-    var lines = res.rows.filter(Boolean);
-    if (!lines.length || (!res.totalMiles && !res.totalGallons)) {
-      summary.textContent = "Your numbers show up here as you type.";
-      detail.hidden = true;
-      return;
-    }
-    var n = res.jurisdictions;
-    var province = lines.some(function (l) { return rates.rows.some(function (r) { return r.code === l.code && r.country === "CA"; }); });
-    var noun = province ? (n === 1 ? "jurisdiction" : "jurisdictions") : (n === 1 ? "state" : "states");
-    var where = (n === 1 ? " in 1 " : " across " + n + " ") + noun + ".";
-    if (res.netTotal >= 0.005) summary.textContent = "You owe about " + usd(res.netTotal) + where;
-    else if (res.netTotal <= -0.005) summary.textContent = "You have about " + usd(-res.netTotal) + " in credit" + where;
-    else summary.textContent = "You come out about even" + where;
+    s.notes.forEach(function (w) { notes.appendChild(el("li", {}, w)); });
+    detail.hidden = !s.detail;
+    if (speak) announce([s.text, s.sub].concat(s.notes).filter(Boolean).join(" "));
+    if (!s.detail) return;
+    var lines = res.rows.filter(function (l) { return l && (l.miles || l.gallons); });
 
-    var surNames = [];
-    lines.forEach(function (l) { if (l.surcharge >= 0.005 && surNames.indexOf(l.name) < 0) surNames.push(l.name); });
-    if (surNames.length) {
-      setText("ifta-summary-sub", "That includes " + usd(res.surchargeTotal) + " in " + surNames.join(" and ") +
-        " surcharge" + (surNames.length > 1 ? "s" : "") + ", owed on every gallon burned there.");
-    }
-    res.warnings.forEach(function (w) { notes.appendChild(el("li", {}, w)); });
-
-    setText("ifta-mpg", res.fleetMpg ? dec2.format(res.fleetMpg) : "n/a");
+    setText("ifta-mpg", dec2.format(res.fleetMpg));
     setText("ifta-miles", whole.format(res.totalMiles));
     setText("ifta-gallons", whole.format(res.totalGallons));
     setText("ifta-tax", usd(res.taxTotal));
@@ -285,17 +358,15 @@
     setText("ifta-foot-tax", usd(res.taxTotal));
     setText("ifta-foot-sur", usd(res.surchargeTotal));
     setText("ifta-foot-net", usd(res.netTotal));
-    detail.hidden = false;
   }
 
-  function recalc() {
-    var res = RigLedgerIfta.computeIfta(rates,
-      state.lines.map(function (l) { return { code: l.code, miles: amount(l.miles), gallons: amount(l.gallons) }; }),
-      { miles: amount(state.totals.miles), gallons: amount(state.totals.gallons) });
+  function recalc(speak) {
+    var rows = state.lines.map(function (l) { return { code: l.code, miles: l.miles, gallons: l.gallons }; });
+    var res = RigLedgerIfta.computeIfta(rates, rows, { miles: state.totals.miles, gallons: state.totals.gallons });
     markErrors(res.errors);
-    show(res);
+    show(res, rows, speak);
   }
-  function changed() { save(); recalc(); }
+  function changed() { save(); recalc(true); }
 
   function onEdit(e) {
     var t = e.target, row = t.closest(".ifta-line");
@@ -307,7 +378,7 @@
   }
   form.addEventListener("input", onEdit);
   form.addEventListener("change", onEdit);
-  form.addEventListener("submit", function (e) { e.preventDefault(); recalc(); summary.focus(); });
+  form.addEventListener("submit", function (e) { e.preventDefault(); clearTimeout(liveTimer); recalc(false); summary.focus(); });
   form.addEventListener("click", function (e) {
     var t = e.target.closest("button");
     if (!t) return;
@@ -344,7 +415,7 @@
     var fill = {
       quarter_label: rates.quarter_label,
       period: isoDate(rates.period_start).replace(/, \d{4}$/, "") + " to " + isoDate(rates.period_end),
-      return_due: isoDate(rates.return_due),
+      return_due: dayDate.format(utc(rates.return_due)),
       retrieved: isoDate(rates.retrieved)
     };
     Array.prototype.forEach.call(document.querySelectorAll("[data-rates]"), function (n) {
@@ -363,7 +434,7 @@
       totalGallonsEl.value = state.totals.gallons;
       totalsBox.open = state.totalsOpen;
       renderLines();
-      recalc();
+      recalc(false);
       form.hidden = false;
       results.hidden = false;
       document.getElementById("ifta-loading").hidden = true;
@@ -375,7 +446,7 @@
 })();
 
 /* Reminder sign-up. data-kit-form holds the Kit form's numeric id; until it does, a submit only says the list
-   opens soon and nothing is sent anywhere. */
+   opens soon and nothing is sent anywhere. Only Kit's JSON "success" goes on to /ifta-thanks (kitResult). */
 (function () {
   "use strict";
   if (typeof document === "undefined") return;
@@ -384,17 +455,28 @@
   optin.addEventListener("submit", function (e) {
     e.preventDefault();
     var id = optin.getAttribute("data-kit-form"), note = document.getElementById("ifta-optin-note");
+    note.hidden = true;
     if (!/^\d+$/.test(id)) {
       note.textContent = "Thanks! The reminder list isn't switched on yet, so nothing was sent and your email wasn't saved. It opens soon.";
       note.hidden = false;
       return;
     }
-    var button = optin.querySelector("button");
+    var button = optin.querySelector("button"), label = button.textContent;
     optin.action = "https://app.kit.com/forms/" + id + "/subscriptions";
     button.disabled = true;
     button.textContent = "Sending...";
     fetch(optin.action, { method: "POST", body: new FormData(optin), headers: { Accept: "application/json" } })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); window.location.href = "/ifta-thanks"; })
-      .catch(function () { optin.submit(); }); // plain post: Kit then shows its own confirmation or redirect
+      .then(function (r) {
+        return r.json().catch(function () { return null; })
+          .then(function (data) { return RigLedgerIfta.kitResult(r.ok, data); });
+      }, function () { return { action: "post" }; }) // network or CORS failure: plain post, Kit shows its own page
+      .then(function (out) {
+        if (out.action === "thanks") { window.location.href = "/ifta-thanks"; return; }
+        if (out.action === "post") { optin.submit(); return; }
+        note.textContent = out.message;
+        note.hidden = false;
+        button.disabled = false;
+        button.textContent = label;
+      });
   });
 })();

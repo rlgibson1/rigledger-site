@@ -11,7 +11,7 @@ Kit form embeds and `ifta-calc.js` on the IFTA calculator page.
 |---|---|---|
 | `index.html` | `/` | What RigLedger is, the three products with store links, the free Cost Per Mile Lite signup, About. |
 | `ifta-calculator.html` | `/ifta-calculator` | Free, ungated IFTA calculator (miles and gallons by jurisdiction in; fleet MPG, per-state tax/credit, KY/VA surcharges, total out), the IFTA reminder opt-in, and an IFTA FAQ. **No store links, prices, or buy buttons** (same guard as `/free`, so it can be shared where store links are barred). Saves the visitor's lines in their own browser (localStorage). |
-| `ifta-thanks.html` | `/ifta-thanks` | Where the IFTA reminder opt-in lands: acknowledgment, then one offer (listing b on Etsy, UTM-tagged, no price). Marked `noindex` and left out of the sitemap, like `/bonus`. |
+| `ifta-thanks.html` | `/ifta-thanks` | Where the IFTA reminder opt-in lands: confirm-your-email step (the confirmation email delivers the checklist), then one offer (listing b on Etsy, UTM-tagged, no price). Marked `noindex` and left out of the sitemap, like `/bonus`. |
 | `bonus.html` | `/bonus` | Bonus pack claim page linked from the last page of every delivery PDF. **No store links, prices, or buy buttons on this page** (Etsy policy: buyers reach it from a purchased file, so it must not read as a way around Etsy fees). Marked `noindex`. |
 | `privacy.html` | `/privacy` | Plain privacy notice. |
 | `404.html` | any missing path | GitHub Pages serves this automatically. |
@@ -38,12 +38,35 @@ script Kit gives you for that form, and delete the `form loads here` paragraph b
 The yellow dashed box (`.signup`) stays; the Kit form renders inside it.
 
 The IFTA reminder form works differently: `ifta-calculator.html` carries its own email form,
-`<form id="ifta-optin" ... data-kit-form="TODO">`. Create a new Kit form for it (email only, tag
-`source:ifta-calculator`, incentive = the one-page quarter-end IFTA filing checklist, after-subscribe redirect to
-`https://rigledger.gsa-company.com/ifta-thanks`), then replace `TODO` with that form's numeric id. That one attribute
-is the whole swap: `ifta-calc.js` posts the email to `https://app.kit.com/forms/<id>/subscriptions` and sends the
-subscriber to `/ifta-thanks`. While it says `TODO`, a submit only shows a "list opens soon" note and sends nothing.
-Test with a real address once after the swap (lands on `/ifta-thanks`, subscriber shows in Kit).
+`<form id="ifta-optin" ... data-kit-form="TODO">`. Replacing `TODO` with the Kit form's numeric id is the whole
+swap: `ifta-calc.js` posts the email to `https://app.kit.com/forms/<id>/subscriptions` and sends the subscriber to
+`/ifta-thanks` only when Kit answers with JSON `"status": "success"` (the same reply Kit's own embed script reads).
+`"quarantined"` (Kit's bot check) and a network failure fall back to a plain form post, so Kit shows its own page; any
+other answer shows Kit's error message under the form and keeps the visitor on the page. While it says `TODO`, a
+submit only shows a "list opens soon" note and sends nothing. Do not swap before every item in "Going live" below is
+done: the page and the thank-you page promise what those items deliver.
+
+## Going live (IFTA calculator)
+
+The calculator is built on the local branch `ifta-calculator`. These are hard prerequisites, in this order, before the
+`TODO` swap and the merge to `main` (a push to `main` is the deploy):
+
+1. Ryan's OK after a fresh review of the branch.
+2. **Kit form**: a new form (not the Cost Per Mile Lite form), email only, tag `source:ifta-calculator`,
+   after-subscribe redirect `https://rigledger.gsa-company.com/ifta-thanks`.
+3. **Incentive email with the checklist**: the form's confirmation (incentive) email turned on, with
+   `rigledger/products/ifta-checklist/RigLedger-IFTA-Quarter-End-Checklist.pdf` as the download. `/ifta-thanks` tells
+   the subscriber the button in that email confirms them and downloads the checklist.
+4. **Reminder broadcasts**: scheduled to the `source:ifta-calculator` tag about 10 days before each quarterly due date,
+   the first on January 21, 2027 (the 4th quarter 2026 return is due Monday, February 1, 2027).
+5. **New-rates broadcast**: drafted for the day the 4th Quarter 2026 matrix is final (IFTA expects early December),
+   sent after the rates refresh below has shipped.
+6. Swap `TODO` for the form id on the branch and run **one real test signup** from the local server (see Local
+   preview): the browser moves to `/ifta-thanks` (the local server 404s on that extension-less path; GitHub Pages
+   serves it), the subscriber shows in Kit with the tag, the confirmation email arrives, and its button downloads the
+   checklist. Then one bad address (for example `test@`) to see Kit's error message show under the form. If the real
+   signup shows an error or lands on a Kit page instead, read the message and fix the form in Kit first.
+7. Merge to `main` and push (the deploy), then repeat the real signup once on the live page.
 
 ## IFTA rates (quarterly refresh)
 
@@ -55,11 +78,17 @@ python marketing/site/export_ifta_rates.py       # writes ../rigledger-site/ifta
 python harness/ifta_calc_parity.py               # JS vs Python ifta(): must be 100 %
 ```
 
-The calculator, the rates box, and the footer's rates line read the quarter from the JSON. Text that still names the
-quarter by hand in `ifta-calculator.html`: `<title>`, the meta and og descriptions, the JSON-LD (WebApplication
-description, the surcharge and rates answers), the eyebrow (`.kicker`), and the "Why do Kentucky and Virginia cost
-more?" and "Which rates" FAQ answers (keep the visible FAQ and the JSON-LD answers word for word the same). Search
-for `3rd Quarter 2026` and `3Q 2026`. If the surcharge states change, rewrite that FAQ answer.
+`return_due` in the JSON is the last day of the month after the quarter, moved off a Saturday or Sunday (R960.100;
+weekends only, see the SHORTCUT note in the exporter).
+
+The calculator, the rates box (quarter, period, due date with its weekday), and the footer's rates line read the
+quarter from the JSON. Text that still names a quarter by hand in `ifta-calculator.html`: `<title>`, the meta and og
+descriptions, the JSON-LD (WebApplication description, the surcharge, due-date and rates answers), the eyebrow
+(`.kicker`), the rates box's "4th Quarter 2026 rates aren't final yet" sentence, the opt-in's "expected in early
+December" bullet, and the "Why do Kentucky and Virginia cost more?", "When is IFTA due?" (worked dates) and "Which
+rates" FAQ answers. Keep the visible FAQ and the JSON-LD answers word for word the same (the page test checks it).
+Search for `3rd Quarter 2026`, `3Q 2026`, `4th Quarter 2026` and `2026`. If the surcharge states change, rewrite that FAQ
+answer. The checklist PDF names the 3rd and 4th quarter 2026 due dates too: refresh it each January.
 
 ## Gumroad URL
 
@@ -95,6 +124,10 @@ the server too.
 - `bonus.html`, `free.html`, and `ifta-calculator.html` still have no store links, prices, or buy buttons.
 - `ifta-thanks.html` names no price.
 - `python harness/ifta_calc_parity.py` (rigledger repo) passes 100 % after any change to `ifta-calc.js` or the rates.
+- `node --test harness/ifta_calc_page.test.js` (rigledger repo) passes: input parsing, headline and error text, Kit
+  reply handling, the due date, and FAQ = JSON-LD.
+- Both IFTA pages carry a Content-Security-Policy meta tag (self, plus `app.kit.com` for the opt-in post). Load
+  `/ifta-calculator` and `/ifta-thanks` through the local server and check the browser console shows no CSP errors.
 - Footer on every page carries the not-advice line, the AI-assisted line, the trademark line, and
   the Privacy link.
 - Phone-width check (390 px) and the dark theme (`prefers-color-scheme: dark`).

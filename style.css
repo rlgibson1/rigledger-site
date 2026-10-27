@@ -14,7 +14,7 @@
   --teal-hover: #184d57;
   --teal-ink: #ffffff;
   --cell-in: #fff2cc;
-  --cell-in-edge: #dcc25f;
+  --cell-in-edge: #94780f;   /* 3:1 or better against paper, surface and --cell-in (input edges) */
   --cell-out: #eaeff1;
   --link: #1b5560;
   --focus: #1f5f6b;
@@ -34,7 +34,7 @@
     --teal-hover: #8ccbd4;
     --teal-ink: #0f1a1b;
     --cell-in: #3a3318;
-    --cell-in-edge: #7a6a2a;
+    --cell-in-edge: #9a8740;
     --cell-out: #1f2b2d;
     --link: #8fcbd3;
     --focus: #f2d77a;
@@ -538,6 +538,8 @@ button.btn {
 .ifta-field-code { grid-area: code; }
 .ifta-field-miles { grid-area: miles; }
 .ifta-field-gallons { grid-area: gallons; }
+.ifta-field-miles,
+.ifta-field-gallons { align-self: end; } /* a two-line label must not push its box down */
 .ifta-remove { grid-area: remove; align-self: end; }
 .ifta-line .ifta-err { grid-area: err; }
 
@@ -666,6 +668,10 @@ button.btn {
 
   .calc-totals-fields { grid-template-columns: 1fr 1fr; }
 }
+
+.calc-help { margin: 0 0 0.75rem; }
+
+.calc-disclaimer { margin: 1rem 0 0; }
 
 .calc-summary {
   margin: 0 0 0.35rem;
