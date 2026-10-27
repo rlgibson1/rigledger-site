@@ -129,8 +129,8 @@
   }
 
   /* The headline for a computeIfta() result: {text, sub, notes, detail}. detail is false while there is nothing
-     worth tabling (no input yet, miles without gallons or the reverse, or an error). rows: the rows computeIfta got,
-     so an error can name its line ("Line 2, Texas: ..."). */
+     worth tabling (no input yet, miles without gallons or the reverse, no miles on any state line, or an error).
+     rows: the rows computeIfta got, so an error can name its line ("Line 2, Texas: ..."). */
   function summarize(res, rates, rows) {
     var list = Array.isArray(rates) ? rates : rates.rows, byCode = {};
     list.forEach(function (r) { byCode[r.code] = r; });
@@ -157,6 +157,8 @@
     if (!res.totalGallons) return waiting("Add your gallons to see your numbers.");
     if (!res.totalMiles) return waiting("Add your miles to see your numbers.");
     if (!lines.length) return waiting("Add your miles and gallons by state to see your numbers.");
+    // A typed total can stand in for missing state miles; then every line would show as credit. Wait instead.
+    if (!lines.some(function (l) { return l.miles; })) return waiting("Add your miles by state to see your numbers.");
 
     var n = res.jurisdictions;
     var province = lines.some(function (l) { return byCode[l.code].country === "CA"; });
@@ -446,12 +448,14 @@
 })();
 
 /* Reminder sign-up. data-kit-form holds the Kit form's numeric id; until it does, a submit only says the list
-   opens soon and nothing is sent anywhere. Only Kit's JSON "success" goes on to /ifta-thanks (kitResult). */
+   opens soon and nothing is sent anywhere. Only Kit's JSON "success" goes on to /ifta-thanks (kitResult).
+   The form ships hidden: without this script it would post to the page itself and get a 405. */
 (function () {
   "use strict";
   if (typeof document === "undefined") return;
   var optin = document.getElementById("ifta-optin");
   if (!optin) return;
+  document.getElementById("ifta-reminder-form").hidden = false;
   optin.addEventListener("submit", function (e) {
     e.preventDefault();
     var id = optin.getAttribute("data-kit-form"), note = document.getElementById("ifta-optin-note");

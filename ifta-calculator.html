@@ -84,7 +84,7 @@
         {
           "@type": "Question",
           "name": "What should I keep in case of an audit?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Keep everything for four years from the due date or the date you filed, whichever is later (IFTA Procedures Manual, P510). For each trip: start and end dates, origin and destination, route, beginning and ending odometer readings, total miles, miles in each jurisdiction, and the unit number (P540.100). For each fuel purchase: a receipt showing the date, the seller's name and address, gallons, fuel type, price, the unit it went into, and the buyer's name (P550.300). An altered or unreadable receipt earns no credit, and thermal paper fades, so photograph receipts the day you get them. If an ELD or GPS keeps your miles, check that it exports the position records as a spreadsheet or CSV; a PDF report doesn't count (P540.200)." }
+          "acceptedAnswer": { "@type": "Answer", "text": "Keep everything for four years from the due date or the date you filed, whichever is later (IFTA Procedures Manual, P510). For each trip: start and end dates, origin and destination, route, beginning and ending odometer readings, total miles, miles in each jurisdiction, and the unit number (P540.100). For each fuel purchase: a receipt showing the date, the seller's name and address, gallons, fuel type, price, the unit it went into, and the buyer's name (P550.300). An altered, erased, or unreadable receipt earns no credit unless you can show it's valid (P550.200), and thermal paper fades, so photograph receipts the day you get them. If an ELD or GPS keeps your miles, check that it exports the position records as a spreadsheet or CSV; a PDF report doesn't count (P540.200)." }
         },
         {
           "@type": "Question",
@@ -213,7 +213,8 @@
         posts to https://app.kit.com/forms/<id>/subscriptions and sends the subscriber to /ifta-thanks only when Kit
         answers status "success". While it says TODO a submit only shows a "list opens soon" note and sends nothing.
       -->
-      <div class="signup" id="ifta-reminder-form">
+      <noscript><p class="optin-note">The sign-up form needs JavaScript turned on.</p></noscript>
+      <div class="signup" id="ifta-reminder-form" hidden>
         <form id="ifta-optin" class="optin" method="post" data-kit-form="TODO">
           <label for="ifta-optin-email">Your email</label>
           <div class="optin-row">
@@ -254,7 +255,7 @@
       <p>On the last day of the month after each quarter ends: 1st quarter (January to March) by April 30, 2nd (April to June) by July 31, 3rd (July to September) by October 31, and 4th (October to December) by January 31. If that day is a Saturday, Sunday, or legal holiday, the next business day is the due date (R960.100). That's why the 3rd quarter 2026 return is due Monday, November 2, 2026 (October 31 is a Saturday) and the 4th quarter 2026 return is due Monday, February 1, 2027 (January 31 is a Sunday). A quarter with no miles still needs a return while your license is active (R930.100).</p>
 
       <h3>What should I keep in case of an audit?</h3>
-      <p>Keep everything for four years from the due date or the date you filed, whichever is later (IFTA Procedures Manual, P510). For each trip: start and end dates, origin and destination, route, beginning and ending odometer readings, total miles, miles in each jurisdiction, and the unit number (P540.100). For each fuel purchase: a receipt showing the date, the seller's name and address, gallons, fuel type, price, the unit it went into, and the buyer's name (P550.300). An altered or unreadable receipt earns no credit, and thermal paper fades, so photograph receipts the day you get them. If an ELD or GPS keeps your miles, check that it exports the position records as a spreadsheet or CSV; a PDF report doesn't count (P540.200).</p>
+      <p>Keep everything for four years from the due date or the date you filed, whichever is later (IFTA Procedures Manual, P510). For each trip: start and end dates, origin and destination, route, beginning and ending odometer readings, total miles, miles in each jurisdiction, and the unit number (P540.100). For each fuel purchase: a receipt showing the date, the seller's name and address, gallons, fuel type, price, the unit it went into, and the buyer's name (P550.300). An altered, erased, or unreadable receipt earns no credit unless you can show it's valid (P550.200), and thermal paper fades, so photograph receipts the day you get them. If an ELD or GPS keeps your miles, check that it exports the position records as a spreadsheet or CSV; a PDF report doesn't count (P540.200).</p>
 
       <h3>Which rates does this calculator use?</h3>
       <p>The 3rd Quarter 2026 diesel rates (the Special Diesel column) and surcharges for all 58 IFTA jurisdictions, from the IFTA, Inc. tax rate matrix. Rates change every quarter. The 4th Quarter 2026 rates aren't final yet; this page moves to them when IFTA finalizes them (expected early December). Until then, treat a 4th quarter result as an estimate.</p>

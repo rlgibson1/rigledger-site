@@ -43,8 +43,10 @@ swap: `ifta-calc.js` posts the email to `https://app.kit.com/forms/<id>/subscrip
 `/ifta-thanks` only when Kit answers with JSON `"status": "success"` (the same reply Kit's own embed script reads).
 `"quarantined"` (Kit's bot check) and a network failure fall back to a plain form post, so Kit shows its own page; any
 other answer shows Kit's error message under the form and keeps the visitor on the page. While it says `TODO`, a
-submit only shows a "list opens soon" note and sends nothing. Do not swap before every item in "Going live" below is
-done: the page and the thank-you page promise what those items deliver.
+submit only shows a "list opens soon" note and sends nothing. The form's box ships `hidden` and `ifta-calc.js`
+reveals it, so a visitor without JavaScript never sees a form that would post to the page itself (a 405 on GitHub
+Pages). Do not swap before every item in "Going live" below is done: the page and the thank-you page promise what
+those items deliver.
 
 ## Going live (IFTA calculator)
 
@@ -57,16 +59,50 @@ The calculator is built on the local branch `ifta-calculator`. These are hard pr
 3. **Incentive email with the checklist**: the form's confirmation (incentive) email turned on, with
    `rigledger/products/ifta-checklist/RigLedger-IFTA-Quarter-End-Checklist.pdf` as the download. `/ifta-thanks` tells
    the subscriber the button in that email confirms them and downloads the checklist.
-4. **Reminder broadcasts**: scheduled to the `source:ifta-calculator` tag about 10 days before each quarterly due date,
-   the first on January 21, 2027 (the 4th quarter 2026 return is due Monday, February 1, 2027).
-5. **New-rates broadcast**: drafted for the day the 4th Quarter 2026 matrix is final (IFTA expects early December),
-   sent after the rates refresh below has shipped.
-6. Swap `TODO` for the form id on the branch and run **one real test signup** from the local server (see Local
+4. **All four 2027 reminder broadcasts, scheduled now**, each to the tag `source:ifta-calculator`, with `IFTA` in the
+   subject, sent 10 days before the weekend-shifted due date (`python ledger/ifta_reminders_check.py plan 2027` in the
+   rigledger repo prints these):
+
+   | Return | Due | Send the reminder | Schedule by |
+   |---|---|---|---|
+   | 4th quarter 2026 | Mon Feb 1, 2027 | Fri Jan 22, 2027 | Fri Jan 8, 2027 |
+   | 1st quarter 2027 | Fri Apr 30, 2027 | Tue Apr 20, 2027 | Tue Apr 6, 2027 |
+   | 2nd quarter 2027 | Mon Aug 2, 2027 | Fri Jul 23, 2027 | Fri Jul 9, 2027 |
+   | 3rd quarter 2027 | Mon Nov 1, 2027 | Fri Oct 22, 2027 | Fri Oct 8, 2027 |
+
+   **Every December**, schedule the next year's four the same way (`plan 2028`, and so on). The opt-in promises a
+   reminder every quarter, so a year with nothing scheduled breaks that promise.
+5. **New-rates email, tied to the rate watcher's ping**: the Jarvis rate watcher (`jarvis nas/income/rigledger_check.py`)
+   posts "IFTA <Q> tax matrix is posted" to Discord when a quarter's matrix appears (4th Quarter 2026: expected early
+   December). Within 3 days of that ping: run the rates refresh below, push the site, then send a broadcast to
+   `source:ifta-calculator` with `IFTA`, `rates` and the quarter in the subject (for example "New IFTA rates: 4th Quarter
+   2026"). Draft its copy before go-live.
+6. **Deploy the reminder check on the NAS** (`rigledger/ledger/ifta_reminders_check.py`, read-only Kit calls). It pages
+   Discord when the next reminder isn't scheduled 14 days before its send date or isn't sent to the tag, and when the
+   rates email hasn't gone out 3 days after the watcher's ping. Pull the rigledger checkout on the NAS, run it once
+   with `--no-post` (it needs the Kit key the drip uses), then add a daily user timer. Unit, next to the drip's:
+
+   ```
+   [Service]
+   Type=oneshot
+   EnvironmentFile=-/etc/jarvis/jarvis.env
+   Environment=RIGLEDGER_KIT_ENV=%h/.config/rigledger/kit.env
+   ExecStart=/usr/bin/python3 %h/rigledger/ledger/ifta_reminders_check.py
+   ```
+
+   Give the timer an Uptime Kuma heartbeat like the other Jarvis timers, or have the 06:40 sentinel watch
+   `ifta-reminders-status.json` for staleness the way it watches the drip's status, so a dead check is noticed too.
+7. Swap `TODO` for the form id on the branch and run **one real test signup** from the local server (see Local
    preview): the browser moves to `/ifta-thanks` (the local server 404s on that extension-less path; GitHub Pages
    serves it), the subscriber shows in Kit with the tag, the confirmation email arrives, and its button downloads the
-   checklist. Then one bad address (for example `test@`) to see Kit's error message show under the form. If the real
-   signup shows an error or lands on a Kit page instead, read the message and fix the form in Kit first.
-7. Merge to `main` and push (the deploy), then repeat the real signup once on the live page.
+   checklist. Keep DevTools > Network open for it: there must be **exactly one POST to `app.kit.com`**, answered with
+   JSON `"status": "success"`, and **exactly one confirmation email** must arrive. The page leaves out the
+   `X-CKJS-Version` header Kit's own embed script sends, so if Kit answered differently (a redirect, HTML), the page
+   could fall back to a second, plain post without saying so. Then one bad address (for example `test@`) to see Kit's
+   error message show under the form. If the real signup shows an error or lands on a Kit page instead, read the
+   message and fix the form in Kit first.
+8. Merge to `main` and push (the deploy), then repeat the real signup once on the live page, with the same one-POST,
+   one-email check.
 
 ## IFTA rates (quarterly refresh)
 
