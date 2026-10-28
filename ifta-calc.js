@@ -23,6 +23,14 @@
   function cents(x) { return Math.abs(x) < 0.005 ? 0 : x; } // no "-$0.00"
   function usd(x) { return money.format(cents(x)); }
 
+  /* Dollars -> whole cents, half away from zero (a credit rounds like an amount due), the way a return rounds each
+     line. x*100 is read at 15 significant digits first, as Excel's ROUND reads a double, so float noise can't flip a
+     half cent: 13 x 0.105 is 1.365 on paper but 1.36499... as a double. Twin of to_cents() in the Python model. */
+  function toCents(x) {
+    var c = Math.round(Number((Math.abs(x) * 100).toPrecision(15)));
+    return x < 0 && c ? -c : c;
+  }
+
   function blank(v) {
     return v === undefined || v === null || (typeof v === "string" && v.trim() === "");
   }
@@ -61,7 +69,8 @@
      totals: optional {miles, gallons}; a blank field means "add up the rows" (an override covers non-IFTA miles,
              exempt miles and fuel bought without the tax)
      Returns {ok, errors, warnings, rows, totalMiles, totalGallons, fleetMpg, taxTotal, surchargeTotal, netTotal,
-     jurisdictions}. Negative totals are credits. Rows with no jurisdiction and no amounts are skipped, and a
+     jurisdictions}. Each row's tax and surcharge are whole cents and every total is the sum of its rows' cents, so the
+     shown lines always add up to the shown totals. Negative totals are credits. Rows with no jurisdiction and no amounts are skipped, and a
      jurisdiction with no miles or gallons isn't counted. */
   function computeIfta(rates, rows, totals) {
     var list = Array.isArray(rates) ? rates : rates.rows;
@@ -103,27 +112,29 @@
     if (overrideGallons && tg < sumGallons) warnings.push("Your total gallons are less than the gallons you entered by state.");
     if (mpg && (mpg < MPG_LOW || mpg > MPG_HIGH)) warnings.push("That's " + dec2.format(mpg) + " MPG. Most trucks run 5-8. Check your gallons.");
 
-    var taxTotal = 0, surchargeTotal = 0;
+    // Tax and surcharge round to the cent on each line; the totals add the rounded lines, in whole cents.
+    var taxCents = 0, surchargeCents = 0;
     var out = clean.map(function (r) {
       if (!r) return null;
       var rate = byCode[r.code];
       var taxable = mpg > 0 ? r.miles / mpg : 0;
       var netGallons = taxable - r.gallons;
-      var tax = netGallons * rate.diesel;
-      var surcharge = taxable * rate.surcharge; // on gallons burned in the state; buying there earns no credit
-      taxTotal += tax;
-      surchargeTotal += surcharge;
+      var tax = toCents(netGallons * rate.diesel);
+      var surcharge = toCents(taxable * rate.surcharge); // on gallons burned in the state; buying there earns no credit
+      taxCents += tax;
+      surchargeCents += surcharge;
       return {
         code: r.code, name: rate.name, miles: r.miles, gallons: r.gallons,
         rate: rate.diesel, surchargeRate: rate.surcharge,
-        taxable: taxable, netGallons: netGallons, tax: tax, surcharge: surcharge, total: tax + surcharge
+        taxable: taxable, netGallons: netGallons, tax: tax / 100, surcharge: surcharge / 100,
+        total: (tax + surcharge) / 100
       };
     });
 
     return {
       ok: true, errors: errors, warnings: warnings, rows: out,
       totalMiles: tm, totalGallons: tg, fleetMpg: mpg,
-      taxTotal: taxTotal, surchargeTotal: surchargeTotal, netTotal: taxTotal + surchargeTotal,
+      taxTotal: taxCents / 100, surchargeTotal: surchargeCents / 100, netTotal: (taxCents + surchargeCents) / 100,
       jurisdictions: Object.keys(codes).length
     };
   }
