@@ -79,14 +79,16 @@
      Returns {ok, errors, warnings, rows, totalMiles, totalGallons, fleetMpg, taxTotal, surchargeTotal, netTotal,
      jurisdictions}. Each row's tax and surcharge are whole cents and every total is the sum of its rows' cents, so the
      shown lines always add up to the shown totals. Negative totals are credits. Rows with no jurisdiction and no amounts are skipped, and a
-     jurisdiction with no miles or gallons isn't counted. */
+     jurisdiction with no miles or gallons isn't counted. A state typed on two lines is added together before rounding,
+     as the return has one line for each: its first line carries the sum, the later ones are null, and a warning says so. */
   function computeIfta(rates, rows, totals) {
     var list = Array.isArray(rates) ? rates : rates.rows;
     var byCode = {};
     list.forEach(function (r) { byCode[r.code] = r; });
     totals = totals || {};
 
-    var errors = [], warnings = [], clean = [];
+    var errors = [], warnings = [], clean = [], first = {}, twice = [];
+    var typedMiles = 0, typedGallons = 0; // as typed, to check a typed total against
     rows.forEach(function (row, i) {
       var miles = checkAmount(row.miles, i, "miles", errors);
       var gallons = checkAmount(row.gallons, i, "gallons", errors);
@@ -96,9 +98,16 @@
       } else if (!byCode[row.code]) {
         errors.push({ row: i, field: "code", message: "Unknown jurisdiction " + row.code + "." });
         clean.push(null);
+      } else if (first[row.code]) { // the same state again: add it to its first line, rounded once below
+        first[row.code].miles += miles;
+        first[row.code].gallons += gallons;
+        if (twice.indexOf(row.code) < 0) twice.push(row.code);
+        clean.push(null);
       } else {
-        clean.push({ code: row.code, miles: units(miles), gallons: units(gallons) }); // whole miles and gallons
+        clean.push(first[row.code] = { code: row.code, miles: miles, gallons: gallons });
       }
+      typedMiles += miles;
+      typedGallons += gallons;
     });
     var overrideMiles = !blank(totals.miles), overrideGallons = !blank(totals.gallons);
     var tmOver = checkAmount(totals.miles, "totals", "miles", errors);
@@ -108,6 +117,8 @@
     var sumMiles = 0, sumGallons = 0, codes = {};
     clean.forEach(function (r) {
       if (!r) return;
+      r.miles = units(r.miles); // whole miles and gallons
+      r.gallons = units(r.gallons);
       sumMiles += r.miles;
       sumGallons += r.gallons;
       if (r.miles || r.gallons) codes[r.code] = true;
@@ -116,9 +127,16 @@
     var tg = overrideGallons ? units(tgOver) : sumGallons;
     var mpg = tg > 0 ? units(tm / tg, 2) / 100 : 0; // rounded once to two decimals (TX 56-102 item E)
 
-    if (overrideMiles && tm < sumMiles) warnings.push("Your total miles are less than the miles you entered by state.");
-    if (overrideGallons && tg < sumGallons) warnings.push("Your total gallons are less than the gallons you entered by state.");
-    if (mpg && (mpg < MPG_LOW || mpg > MPG_HIGH)) warnings.push("That's " + dec2.format(mpg) + " MPG. Most trucks run 5-8. Check your gallons.");
+    twice.forEach(function (code) {
+      warnings.push(byCode[code].name + " is on more than one line, so its miles and gallons are added together. " +
+        "The return has one line for each.");
+    });
+    // Typed figures against typed figures (read at 15 digits, so 0.1 + 0.2 equals a typed 0.3): rounding can't hide a
+    // total that really is short, or raise one that isn't.
+    if (overrideMiles && tmOver < Number(typedMiles.toPrecision(15))) warnings.push("Your total miles are less than the miles you entered by state.");
+    if (overrideGallons && tgOver < Number(typedGallons.toPrecision(15))) warnings.push("Your total gallons are less than the gallons you entered by state.");
+    // Also when the MPG rounds to 0.00 (a few miles over a lot of gallons), which would leave every line a credit.
+    if (tm > 0 && tg > 0 && (mpg < MPG_LOW || mpg > MPG_HIGH)) warnings.push("That's " + dec2.format(mpg) + " MPG. Most trucks run 5-8. Check your gallons.");
 
     // Whole taxable gallons (TX 56-102 column K); tax and surcharge round to the cent on each line; the totals add
     // the rounded lines, in whole cents.
