@@ -3,6 +3,9 @@
    plus the page's input rules (parseAmount), its headline (summarize) and its reading of Kit's reply (kitResult).
    The parity harness (rigledger/harness/ifta_calc_parity.py) runs computeIfta under Node against the Python model it
    mirrors (harness/models/trucking.py, ifta()); rigledger/harness/ifta_calc_page.test.js covers the rest.
+   The math is worked the way the IFTA return form does (TX Form 56-102, NY IFTA-101-I): whole miles and gallons,
+   fleet MPG rounded once to two decimals, whole taxable gallons, tax and surcharge to the cent, totals adding the
+   rounded lines.
    Browser: window.RigLedgerIfta. Node: require("./ifta-calc.js"). */
 (function (root, factory) {
   var api = factory();
@@ -23,15 +26,18 @@
   function cents(x) { return Math.abs(x) < 0.005 ? 0 : x; } // no "-$0.00"
   function usd(x) { return money.format(cents(x)); }
 
-  /* Dollars -> whole cents, half away from zero (a credit rounds like an amount due), as Excel's ROUND(x, 2) does.
-     |x| is read at 15 significant digits first, as Excel reads a double, so float noise can't flip a half cent:
-     13 x 0.105 is 1.365 on paper but 1.36499... as a double. The second read undoes the float error of the x 100.
-     Twin of to_cents() in the Python model (rigledger harness/models/trucking.py). */
-  function toCents(x) {
+  /* x rounded to `places` decimals, as a whole count of those units (units(1.365, 2) is 137), half away from zero
+     (a credit rounds like an amount due), as Excel's ROUND(x, places) does. |x| is read at 15 significant digits
+     first, as Excel reads a double, so float noise can't flip a half: 13 x 0.105 is 1.365 on paper but 1.36499...
+     as a double, and 10010 / 2000 is 5.00499.... The second read undoes the float error of the scaling.
+     Twin of units() in the Python model (rigledger harness/models/trucking.py). */
+  function units(x, places) {
+    var scale = Math.pow(10, places || 0);
     var d = Number(Math.abs(x).toPrecision(15));
-    var c = Math.round(Number((d * 100).toPrecision(15)));
+    var c = Math.round(Number((d * scale).toPrecision(15)));
     return x < 0 && c ? -c : c;
   }
+  function toCents(x) { return units(x, 2); }
 
   function blank(v) {
     return v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -91,7 +97,7 @@
         errors.push({ row: i, field: "code", message: "Unknown jurisdiction " + row.code + "." });
         clean.push(null);
       } else {
-        clean.push({ code: row.code, miles: miles, gallons: gallons });
+        clean.push({ code: row.code, miles: units(miles), gallons: units(gallons) }); // whole miles and gallons
       }
     });
     var overrideMiles = !blank(totals.miles), overrideGallons = !blank(totals.gallons);
@@ -106,20 +112,21 @@
       sumGallons += r.gallons;
       if (r.miles || r.gallons) codes[r.code] = true;
     });
-    var tm = overrideMiles ? tmOver : sumMiles;
-    var tg = overrideGallons ? tgOver : sumGallons;
-    var mpg = tg ? tm / tg : 0;
+    var tm = overrideMiles ? units(tmOver) : sumMiles;
+    var tg = overrideGallons ? units(tgOver) : sumGallons;
+    var mpg = tg > 0 ? units(tm / tg, 2) / 100 : 0; // rounded once to two decimals (TX 56-102 item E)
 
     if (overrideMiles && tm < sumMiles) warnings.push("Your total miles are less than the miles you entered by state.");
     if (overrideGallons && tg < sumGallons) warnings.push("Your total gallons are less than the gallons you entered by state.");
     if (mpg && (mpg < MPG_LOW || mpg > MPG_HIGH)) warnings.push("That's " + dec2.format(mpg) + " MPG. Most trucks run 5-8. Check your gallons.");
 
-    // Tax and surcharge round to the cent on each line; the totals add the rounded lines, in whole cents.
+    // Whole taxable gallons (TX 56-102 column K); tax and surcharge round to the cent on each line; the totals add
+    // the rounded lines, in whole cents.
     var taxCents = 0, surchargeCents = 0;
     var out = clean.map(function (r) {
       if (!r) return null;
       var rate = byCode[r.code];
-      var taxable = mpg > 0 ? r.miles / mpg : 0;
+      var taxable = mpg > 0 ? units(r.miles / mpg) : 0;
       var netGallons = taxable - r.gallons;
       var tax = toCents(netGallons * rate.diesel);
       var surcharge = toCents(taxable * rate.surcharge); // on gallons burned in the state; buying there earns no credit
@@ -201,7 +208,8 @@
     return { action: "error", message: msgs.length ? msgs.join(" ") : "That didn't go through. Check the address and try again." };
   }
 
-  return { computeIfta: computeIfta, parseAmount: parseAmount, summarize: summarize, kitResult: kitResult, usd: usd };
+  return { computeIfta: computeIfta, parseAmount: parseAmount, summarize: summarize, kitResult: kitResult, usd: usd,
+    units: units };
 });
 
 /* Page wiring for /ifta-calculator. Does nothing under Node or on a page without the calculator. */
@@ -228,7 +236,7 @@
   var longDate = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   var dayDate = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
-  function gal(x) { return dec2.format(Math.abs(x) < 0.005 ? 0 : x); }
+  function gal(x) { return whole.format(x); } // whole gallons, as the return shows them
   function utc(s) { var p = s.split("-"); return new Date(Date.UTC(+p[0], p[1] - 1, +p[2])); }
   function isoDate(s) { return longDate.format(utc(s)); }
   function blankLine() { return { code: "", miles: "", gallons: "" }; }
