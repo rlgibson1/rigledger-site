@@ -50,8 +50,14 @@ those items deliver.
 
 ## Going live (IFTA calculator)
 
-The calculator is built on the local branch `ifta-calculator`. These are hard prerequisites, in this order, before the
-`TODO` swap and the merge to `main` (a push to `main` is the deploy):
+The calculator is built on the local branch `ifta-calculator`.
+
+**Status 2026-10-28:** with Ryan's OK, the calculator, the rates file and the app pages went live ahead of the Kit
+pieces. The whole reminder box (`<section class="optin-box" ... hidden>`) ships hidden, so the live page promises
+nothing that isn't set up yet. Items 2-7 below are still owed before the reminder box can turn on. At the swap in
+item 7, also remove `hidden` from that section, then push.
+
+These are hard prerequisites, in this order, before the `TODO` swap:
 
 1. Ryan's OK after a fresh review of the branch.
 2. **Kit form**: a new form (not the Cost Per Mile Lite form), email only, tag `source:ifta-calculator`,
