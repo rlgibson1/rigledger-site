@@ -23,11 +23,13 @@
   function cents(x) { return Math.abs(x) < 0.005 ? 0 : x; } // no "-$0.00"
   function usd(x) { return money.format(cents(x)); }
 
-  /* Dollars -> whole cents, half away from zero (a credit rounds like an amount due), the way a return rounds each
-     line. x*100 is read at 15 significant digits first, as Excel's ROUND reads a double, so float noise can't flip a
-     half cent: 13 x 0.105 is 1.365 on paper but 1.36499... as a double. Twin of to_cents() in the Python model. */
+  /* Dollars -> whole cents, half away from zero (a credit rounds like an amount due), as Excel's ROUND(x, 2) does.
+     |x| is read at 15 significant digits first, as Excel reads a double, so float noise can't flip a half cent:
+     13 x 0.105 is 1.365 on paper but 1.36499... as a double. The second read undoes the float error of the x 100.
+     Twin of to_cents() in the Python model (rigledger harness/models/trucking.py). */
   function toCents(x) {
-    var c = Math.round(Number((Math.abs(x) * 100).toPrecision(15)));
+    var d = Number(Math.abs(x).toPrecision(15));
+    var c = Math.round(Number((d * 100).toPrecision(15)));
     return x < 0 && c ? -c : c;
   }
 
