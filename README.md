@@ -38,8 +38,8 @@ script Kit gives you for that form, and delete the `form loads here` paragraph b
 The yellow dashed box (`.signup`) stays; the Kit form renders inside it.
 
 The IFTA reminder form works differently: `ifta-calculator.html` carries its own email form,
-`<form id="ifta-optin" ... data-kit-form="TODO">`. Replacing `TODO` with the Kit form's numeric id is the whole
-swap: `ifta-calc.js` posts the email to `https://app.kit.com/forms/<id>/subscriptions` and sends the subscriber to
+`<form id="ifta-optin" ... data-kit-form="10117092">` (Kit form "RigLedger - IFTA reminders", live 2026-10-29). That
+id is the whole hookup: `ifta-calc.js` posts the email to `https://app.kit.com/forms/<id>/subscriptions` and sends the subscriber to
 `/ifta-thanks` only when Kit answers with JSON `"status": "success"` (the same reply Kit's own embed script reads).
 `"quarantined"` (Kit's bot check) and a network failure fall back to a plain form post, so Kit shows its own page; any
 other answer shows Kit's error message under the form and keeps the visitor on the page. While it says `TODO`, a
@@ -58,20 +58,24 @@ nothing that isn't set up yet. Items 2-7 below are still owed before the reminde
 item 7, also remove `hidden` from that section, then push.
 
 **Status 2026-10-29:** Ryan re-approved the email copy. Item 4 is DONE: the four 2027 reminders are scheduled in Kit
-(broadcasts 26687484, 26687485, 26687487, 26687488, 8:00 AM Central, to the tag alone; the tag now exists) by rigledger
-`ledger/ifta_reminders_schedule.py 2027 --apply` on the NAS. Item 6 is DONE: timer `jarvis-rigledger-ifta-reminders`
-(daily 12:45 UTC) is live, its first run passed, and `REMINDERS_LIVE_FROM` is set. Item 5's copy is drafted (email
-README 3.1). Left: items 2-3 (the Kit form and its incentive email, which need Ryan's Kit login), then 7 and 8.
+(broadcasts 26687484, 26687485, 26687487, 26687488, 8:00 AM Central, to the segment `IFTA calculator sign-ups`
+alone) by rigledger `ledger/ifta_reminders_schedule.py 2027 --apply` on the NAS. Item 6 is DONE: timer
+`jarvis-rigledger-ifta-reminders` (daily 12:45 UTC) is live, its first run passed, and `REMINDERS_LIVE_FROM` is set.
+Item 5's copy is drafted (email README 3.1). Items 2-3 DONE after Ryan's Kit login: form 10117092 (confirmation
+email = the approved copy, download = the checklist PDF, redirect /ifta-thanks), segment 602822. Then 7 and 8.
+(An unused tag `source:ifta-calculator` was created before the free plan's no-tagging limit was found; it's harmless.)
 
 These are hard prerequisites, in this order, before the `TODO` swap:
 
 1. Ryan's OK after a fresh review of the branch.
-2. **Kit form**: a new form (not the Cost Per Mile Lite form), email only, tag `source:ifta-calculator`,
-   after-subscribe redirect `https://rigledger.gsa-company.com/ifta-thanks`.
+2. **Kit form**: a new form (not the Cost Per Mile Lite form), email only, after-subscribe redirect
+   `https://rigledger.gsa-company.com/ifta-thanks`. The free plan's forms can't add a tag (Kit rules need the Creator
+   plan), so the audience is the Kit segment `IFTA calculator sign-ups` = subscribed to this form. DONE 10/29: form
+   10117092, segment 602822.
 3. **Incentive email with the checklist**: the form's confirmation (incentive) email turned on, with
    `rigledger/products/ifta-checklist/RigLedger-IFTA-Quarter-End-Checklist.pdf` as the download. `/ifta-thanks` tells
    the subscriber the button in that email confirms them and downloads the checklist.
-4. **All four 2027 reminder broadcasts, scheduled now**, each to the tag `source:ifta-calculator` alone (no second tag,
+4. **All four 2027 reminder broadcasts, scheduled now**, each to the segment `IFTA calculator sign-ups` alone (no tag, second
    segment or exclusion). A reminder's subject contains `IFTA` and `due` or `reminder`, never `rates` (the reminder
    check enforces both; the drafts in rigledger `marketing/emails/ifta-funnel/README.md` already comply). Each goes out
    10 days before the weekend-shifted due date (`python ledger/ifta_reminders_check.py plan 2027` in the rigledger repo
@@ -91,7 +95,7 @@ These are hard prerequisites, in this order, before the `TODO` swap:
 5. **New-rates email, tied to the rate watcher's ping**: the Jarvis rate watcher (`jarvis nas/income/rigledger_check.py`)
    posts "IFTA <Q> tax matrix is posted" to Discord when a quarter's matrix appears (4th Quarter 2026: expected early
    December). Within 3 days of that ping: run the rates refresh below, push the site, then send a broadcast to
-   `source:ifta-calculator` with `IFTA`, `rates` and the quarter in the subject (for example "New IFTA rates: 4th Quarter
+   the segment `IFTA calculator sign-ups` with `IFTA`, `rates` and the quarter in the subject (for example "New IFTA rates: 4th Quarter
    2026"). Draft its copy before go-live.
 6. **Deploy the reminder check on the NAS** (`rigledger/ledger/ifta_reminders_check.py`, read-only Kit calls). It pages
    Discord when the next reminder isn't scheduled 14 days before its send date or isn't sent to the tag, and when the

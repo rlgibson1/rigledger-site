@@ -195,9 +195,8 @@
       <p class="small muted calc-disclaimer">Planning and record-keeping tool. Not tax, legal, or engineering advice.</p>
     </section>
 
-    <!-- The whole box ships hidden until the Kit pieces in README "Going live" exist: its bullets promise them.
-         At the TODO swap below, remove `hidden` from this section too. -->
-    <section class="optin-box" aria-labelledby="optin-heading" hidden>
+    <!-- Live since the Kit pieces in README "Going live" exist (2026-10-29): its bullets promise them. -->
+    <section class="optin-box" aria-labelledby="optin-heading">
       <h2 id="optin-heading">Get a heads-up 10 days before every IFTA deadline</h2>
       <p>IFTA has a way of showing up two days before it's due, right when you're out on a run. Leave your email and you'll get:</p>
       <ul>
@@ -206,18 +205,17 @@
         <li><strong>A one-page quarter-end filing checklist</strong> to download as soon as you confirm your email, so nothing's missing when you sit down to file.</li>
       </ul>
       <!--
-        KIT_FORM_IFTA_REMINDERS: a NEW Kit form must be created by Jarvis/Ryan before this goes live (it is not the
-        Cost Per Mile Lite form). Email field only, tag source:ifta-calculator, incentive = the one-page quarter-end
-        IFTA filing checklist, and set its after-subscribe redirect to https://rigledger.gsa-company.com/ifta-thanks.
-        The bullets above promise the checklist, the reminders and the new-rates email, so README "Going live" lists
-        them as hard prerequisites: do those first. Then replace TODO in data-kit-form below with that form's numeric
-        id (the number in its Kit URL, app.kit.com/forms/<id>/...). That one attribute is the whole swap: ifta-calc.js
-        posts to https://app.kit.com/forms/<id>/subscriptions and sends the subscriber to /ifta-thanks only when Kit
-        answers status "success". While it says TODO a submit only shows a "list opens soon" note and sends nothing.
+        KIT_FORM_IFTA_REMINDERS: Kit form 10117092 "RigLedger - IFTA reminders (/ifta-calculator)", not the Cost Per
+        Mile Lite form. Email only; its confirmation email delivers the one-page quarter-end IFTA filing checklist; its
+        after-subscribe redirect is https://rigledger.gsa-company.com/ifta-thanks. The reminders and the new-rates email
+        go to the Kit segment "IFTA calculator sign-ups" (everyone subscribed to this form). ifta-calc.js posts to
+        https://app.kit.com/forms/<id>/subscriptions and sends the subscriber to /ifta-thanks only when Kit answers
+        status "success". Set data-kit-form back to TODO to stop sign-ups: a submit then only shows a "list opens soon"
+        note and sends nothing.
       -->
       <noscript><p class="optin-note">The sign-up form needs JavaScript turned on.</p></noscript>
       <div class="signup" id="ifta-reminder-form" hidden>
-        <form id="ifta-optin" class="optin" method="post" data-kit-form="TODO">
+        <form id="ifta-optin" class="optin" method="post" data-kit-form="10117092">
           <label for="ifta-optin-email">Your email</label>
           <div class="optin-row">
             <input type="email" id="ifta-optin-email" name="email_address" autocomplete="email" required>
