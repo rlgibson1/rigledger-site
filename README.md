@@ -57,6 +57,12 @@ pieces. The whole reminder box (`<section class="optin-box" ... hidden>`) ships 
 nothing that isn't set up yet. Items 2-7 below are still owed before the reminder box can turn on. At the swap in
 item 7, also remove `hidden` from that section, then push.
 
+**Status 2026-10-29:** Ryan re-approved the email copy. Item 4 is DONE: the four 2027 reminders are scheduled in Kit
+(broadcasts 26687484, 26687485, 26687487, 26687488, 8:00 AM Central, to the tag alone; the tag now exists) by rigledger
+`ledger/ifta_reminders_schedule.py 2027 --apply` on the NAS. Item 6 is DONE: timer `jarvis-rigledger-ifta-reminders`
+(daily 12:45 UTC) is live, its first run passed, and `REMINDERS_LIVE_FROM` is set. Item 5's copy is drafted (email
+README 3.1). Left: items 2-3 (the Kit form and its incentive email, which need Ryan's Kit login), then 7 and 8.
+
 These are hard prerequisites, in this order, before the `TODO` swap:
 
 1. Ryan's OK after a fresh review of the branch.
@@ -78,7 +84,9 @@ These are hard prerequisites, in this order, before the `TODO` swap:
    | 2nd quarter 2027 | Mon Aug 2, 2027 | Fri Jul 23, 2027 | Fri Jul 9, 2027 |
    | 3rd quarter 2027 | Mon Nov 1, 2027 | Fri Oct 22, 2027 | Fri Oct 8, 2027 |
 
-   **Every December**, schedule the next year's four the same way (`plan 2028`, and so on). The opt-in promises a
+   **Every December**, schedule the next year's four the same way: fill the next year's four in the email README
+   (`plan 2028` gives the dates), then on the NAS `python3 ledger/ifta_reminders_schedule.py 2028` (dry run) and again
+   with `--apply`. The opt-in promises a
    reminder every quarter, so a year with nothing scheduled breaks that promise.
 5. **New-rates email, tied to the rate watcher's ping**: the Jarvis rate watcher (`jarvis nas/income/rigledger_check.py`)
    posts "IFTA <Q> tax matrix is posted" to Discord when a quarter's matrix appears (4th Quarter 2026: expected early
