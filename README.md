@@ -61,7 +61,9 @@ item 7, also remove `hidden` from that section, then push.
 (broadcasts 26687484, 26687485, 26687487, 26687488, 8:00 AM Central, to the segment `IFTA calculator sign-ups`
 alone) by rigledger `ledger/ifta_reminders_schedule.py 2027 --apply` on the NAS. Item 6 is DONE: timer
 `jarvis-rigledger-ifta-reminders` (daily 12:45 UTC) is live, its first run passed, and `REMINDERS_LIVE_FROM` is set.
-Item 5's copy is drafted (email README 3.1). Items 2-3 DONE after Ryan's Kit login: form 10117092 (confirmation
+Item 5's copy is drafted (email README 3.1). **LIVE 2026-10-29 (main df0eaeb):** items 7-8 passed, locally and on the live
+page, with exactly one POST to app.kit.com (200) and the move to /ifta-thanks. The local run's one confirmation email
+matched the approved copy, and its button ended at the 5482-byte checklist PDF. Items 2-3 DONE after Ryan's Kit login: form 10117092 (confirmation
 email = the approved copy, download = the checklist PDF, redirect /ifta-thanks), segment 602822. Then 7 and 8.
 (An unused tag `source:ifta-calculator` was created before the free plan's no-tagging limit was found; it's harmless.)
 
