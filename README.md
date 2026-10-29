@@ -98,7 +98,7 @@ These are hard prerequisites, in this order, before the `TODO` swap:
    the segment `IFTA calculator sign-ups` with `IFTA`, `rates` and the quarter in the subject (for example "New IFTA rates: 4th Quarter
    2026"). Draft its copy before go-live.
 6. **Deploy the reminder check on the NAS** (`rigledger/ledger/ifta_reminders_check.py`, read-only Kit calls). It pages
-   Discord when the next reminder isn't scheduled 14 days before its send date or isn't sent to the tag, and when the
+   Discord when the next reminder isn't scheduled 14 days before its send date or isn't sent to exactly the segment, or two are scheduled for one return, and when the
    rates email hasn't gone out 3 days after the watcher's ping. Pull the rigledger checkout on the NAS, run it once
    with `--no-post` (it needs the Kit key the drip uses), then add a daily user timer. Unit, next to the drip's:
 
@@ -115,7 +115,7 @@ These are hard prerequisites, in this order, before the `TODO` swap:
    and, from that date on, every Monday it has never run. Left at `None`, a check that was never deployed stays silent.
 7. Swap `TODO` for the form id on the branch and run **one real test signup** from the local server (see Local
    preview): the browser moves to `/ifta-thanks` (the local server 404s on that extension-less path; GitHub Pages
-   serves it), the subscriber shows in Kit with the tag, the confirmation email arrives, and its button downloads the
+   serves it), the subscriber shows in Kit as active on form 10117092 (so in the segment), the confirmation email arrives, and its button downloads the
    checklist. Keep DevTools > Network open for it: there must be **exactly one POST to `app.kit.com`**, answered with
    JSON `"status": "success"`, and **exactly one confirmation email** must arrive. The page leaves out the
    `X-CKJS-Version` header Kit's own embed script sends, so if Kit answered differently (a redirect, HTML), the page
