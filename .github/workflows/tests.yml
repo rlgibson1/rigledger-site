@@ -1,0 +1,25 @@
+# Always-pass check: this repo has no test suite CI can run (reason below).
+# The job is named `tests`: that is the check a default-branch rule requires once this repo moves into
+# the gsa-llc organization, so it runs on every pull request and every push to main, with no path filter
+# (a docs-only change still gets a verdict). No secrets are used or available to this job.
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: 'echo "No test suite: rigledger-site is static pages served by GitHub Pages."'
