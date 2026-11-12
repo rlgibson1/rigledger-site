@@ -12,10 +12,10 @@ on:
 permissions:
   contents: read
 
-# A pull request's superseded runs are cancelled; a push to the default branch never cancels the previous
-# commit's run, so every default-branch commit keeps its own verdict.
+# A pull request's runs share one group per ref, so a newer push cancels the older run. Each push to the default
+# branch gets its own group (its commit sha), so no default-branch run is ever cancelled or replaced by a later one.
 concurrency:
-  group: tests-${{ github.ref }}
+  group: tests-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
