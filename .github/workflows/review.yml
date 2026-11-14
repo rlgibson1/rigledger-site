@@ -1,0 +1,29 @@
+# Claude review on every merge request, through the organization's one reusable copy (claude-review.yml).
+# Every gsa-llc repo carries this file unchanged as .github/workflows/review.yml; the definition is jarvis
+# nas/config/github-workflows/review.yml (docs/handoff/ops-crew-runbook.md "Claude review: go-live").
+name: review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# The ceiling for every job in claude-review.yml (a called workflow can never exceed its caller), frozen once the
+# repo is on the workflow lock. id-token is headroom only: no job requests it today, and it lets a later switch to
+# workload identity federation, Bedrock/Vertex OIDC or the action's own App token happen with no caller edit.
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+# One review per request: a new push cancels the running one, so only the final push's review finishes.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude:
+    uses: gsa-llc/workflows/.github/workflows/claude-review.yml@main
+    # By name, not `inherit`: the host repo's workflow never sees this repo's other secrets.
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
